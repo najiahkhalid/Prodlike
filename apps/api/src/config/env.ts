@@ -41,6 +41,9 @@ const EnvSchema = z.object({
   SANDBOX_MAX_ACTIVE: z.coerce.number().int().positive().default(8),
   /** Attempts idle longer than this are abandoned and their sandbox removed (FR-05). */
   SANDBOX_IDLE_MINUTES: z.coerce.number().positive().default(60),
+
+  /** Engine clock: 1 = real time; tests use e.g. 0.2 to run deploys and incidents 5x faster. */
+  ENGINE_TIME_SCALE: z.coerce.number().positive().max(10).default(1),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

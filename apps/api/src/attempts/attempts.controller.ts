@@ -1,12 +1,15 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
 import {
   CommandSchema,
+  DeploySchema,
   SaveFileSchema,
   StartAttemptSchema,
   type AccessTokenClaims,
   type AttemptView,
   type CommandInput,
   type CommandResult,
+  type DeployInput,
+  type EngineSnapshot,
   type SaveFileInput,
   type StartAttemptInput,
   type TestRunResult,
@@ -68,6 +71,31 @@ export class AttemptsController {
   @Post(':id/tests')
   tests(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string): Promise<TestRunResult> {
     return this.attempts.runTests(user, id);
+  }
+
+  /** FR-08/09: commit + CI/CD pipeline + deploy. Returns at once; progress streams over the socket. */
+  @HttpCode(202)
+  @Post(':id/deploy')
+  deploy(
+    @CurrentUser() user: AccessTokenClaims,
+    @Param('id') id: string,
+    @Body(new ZodPipe(DeploySchema)) body: DeployInput,
+  ): Promise<EngineSnapshot> {
+    return this.attempts.deploy(user, id, body);
+  }
+
+  /** FR-11: roll production back to the previous release. */
+  @HttpCode(200)
+  @Post(':id/rollback')
+  rollback(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string) {
+    return this.attempts.rollback(user, id);
+  }
+
+  /** Finish once production is healthy. */
+  @HttpCode(200)
+  @Post(':id/finish')
+  finish(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string): Promise<EngineSnapshot> {
+    return this.attempts.finish(user, id);
   }
 
   @HttpCode(200)

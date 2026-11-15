@@ -4,7 +4,7 @@
 
 CS344 Web Engineering · NUST SEECS · Team Prodlike: Najiah Khalid (lead), Zeeshan Haider Awan, Bilal Ahmed.
 
-> **Status: Phase 2 (Sandbox + workspace).** Learners start an attempt and get a private, locked-down Docker sandbox with a code editor, a restricted terminal and real test runs. Their work survives a refresh or a lost container. Next: Phase 3, the CI/CD pipeline, incidents and the live system map.
+> **Status: Phase 3 (Scenario engine).** The full story runs live: fix the bug, ship it through a real CI/CD pipeline (build, lint, test in the sandbox), deploy direct or canary, survive the injected incident on the live 3D/2D system map, then recover by rollback or hotfix. Next: Phase 4, scoring, debrief, hints and the guest demo.
 
 ## Repository layout
 
@@ -56,6 +56,7 @@ The landing page shows a **Platform status** card that calls the API's `/health`
 - The browser only ever calls **same-origin `/api/*`**. In Docker, Caddy routes `/api` to the API. On the host, the Next.js route `src/app/api/[...path]` proxies it. Auth cookies are therefore first-party.
 - **Auth** (ADR-004): a 15-minute access JWT (`pl_at`) and a rotating refresh token (`pl_rt`), both httpOnly cookies. The API enforces roles on every endpoint. `src/middleware.ts` in the web app only decides which pages a role may open, and silently renews expired sessions through `/auth/refresh`.
 - **Sandboxes** (ADR-005, ADR-006): starting an attempt claims a warm container from a pool: no network, non-root, read-only system files, 512 MB / 1 CPU / 128 processes. The terminal never runs a shell; commands are checked against the scenario's allowlist. Saved files are also kept in the database, so a lost container is rebuilt without losing work. Attempts idle for 60 minutes are cleaned up.
+- **Scenario engine** (ADR-007): one state machine per attempt. The pipeline's build, lint and test stages run for real in the sandbox; the deploy, production metrics, logs and incidents are simulated from the scenario file. Live updates reach the browser over Socket.IO (`/api/socket.io` behind Caddy, the API port with `pnpm dev`), with polling as a fallback.
 - **Scenarios** are read from `scenarios/` when the API starts and stored as immutable `ScenarioVersion` rows. The public catalogue and brief never include faults, hidden tests or hints.
 
 ## Tests

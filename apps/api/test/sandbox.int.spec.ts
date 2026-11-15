@@ -117,7 +117,7 @@ run('Sandbox workspace (Phase 2)', () => {
     expect(passing).toMatchObject({ passed: 3, failed: 0 });
 
     const view: AttemptView = (await ali.get(`/attempts/${attempt.id}`).expect(200)).body;
-    expect(view.progress).toEqual({ changed: true, testsPassed: true });
+    expect(view.progress).toMatchObject({ changed: true, testsPassed: true, deployed: false });
     expect(view.files.find((f) => f.path === 'src/discount.js')?.modified).toBe(true);
   });
 
@@ -146,7 +146,8 @@ run('Sandbox workspace (Phase 2)', () => {
       expect(r.output).toContain('Allowed commands');
     }
     const logs = await cmd('logs payments');
-    expect(logs.output).toMatch(/not deployed to yet/);
+    // Before any deploy, production is healthy (the engine serves logs since Phase 3).
+    expect(logs.output).toMatch(/healthy/);
   });
 
   it('starting the same scenario again resumes the attempt', async () => {

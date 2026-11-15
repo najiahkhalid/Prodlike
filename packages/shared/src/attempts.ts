@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { EngineState } from './events';
+import type { EngineSnapshot, EngineState } from './events';
 
 /** POST /attempts — start (or resume) an attempt at a scenario (FR-05). */
 export const StartAttemptSchema = z.object({ scenario: z.string().min(1).max(80) });
@@ -39,9 +39,11 @@ export interface AttemptView {
   };
   files: WorkspaceFile[];
   /** Lifecycle steps reached so far: understand, change, test, ship, recover. */
-  progress: { changed: boolean; testsPassed: boolean };
+  progress: { changed: boolean; testsPassed: boolean; deployed: boolean; recovered: boolean };
   /** Milliseconds the sandbox took to become ready (NFR-02), when it was just provisioned. */
   provisionedInMs?: number;
+  /** Production as the scenario engine sees it (Phase 3). */
+  engine: EngineSnapshot;
 }
 
 export interface CommandResult {
