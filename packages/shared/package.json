@@ -1,0 +1,23 @@
+{
+  "name": "@prodlike/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "validate:scenarios": "tsc -p tsconfig.build.json && node scripts/validate-scenarios.mjs"
+  },
+  "dependencies": {
+    "yaml": "2.6.1",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "vitest": "2.1.8"
+  }
+}

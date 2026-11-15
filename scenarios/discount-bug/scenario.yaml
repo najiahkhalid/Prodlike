@@ -1,0 +1,181 @@
+# Scenario format: packages/shared/src/scenario/schema.ts  ·  Authoring guide: docs/scenario-authoring.md
+schemaVersion: 1
+slug: discount-bug
+title: The Rs 1,000 Discount Bug
+summary: Orders of exactly Rs 1,000 miss the 10% promo. Fix it, prove it, ship it, then survive what else is in the release.
+difficulty: beginner
+skills: [Bug fix, Testing, Rollback]
+estimatedMinutes: 10
+guestDemo: true
+
+company:
+  name: ByteBite Food Delivery
+  description: >-
+    ByteBite is a food-delivery startup. orders-service calculates totals (including promotions)
+    and charges customers through payments-service. You joined the platform team this week.
+
+brief:
+  ticketId: BYTE-482
+  priority: P2
+  type: bug
+  reportedBy: Customer Support
+  title: Customers with an order of exactly Rs 1,000 are not getting the 10% discount
+  body: >-
+    Our promo says "10% off on orders of Rs 1,000 or more". Support has 23 complaints today from
+    customers whose basket was exactly Rs 1,000. Fix the discount rule, make sure it is covered by a
+    test, and ship it to production before the evening rush.
+  teammateMessage:
+    from: Sana
+    role: Senior Engineer
+    text: >-
+      Heads-up: there's a config change for payments timeouts in the same release train.
+      Keep an eye on the dashboards after you deploy.
+  objectives:
+    - Find and fix the discount boundary bug in orders-service.
+    - Add or update a test that proves the fix.
+    - Ship the change through the CI/CD pipeline.
+    - Watch production and resolve any incident that appears.
+  constraints:
+    - 'The terminal only allows: npm test, git diff, git log, logs <service>, rollback.'
+    - Each hint costs 5 rubric points.
+
+architecture:
+  nodes:
+    - { id: web, label: Web app, kind: client, position: { x: 0, y: 1.5 } }
+    - { id: gateway, label: API gateway, kind: gateway, position: { x: 2, y: 1.5 } }
+    - { id: orders, label: orders-service, kind: service, position: { x: 4, y: 0.2 } }
+    - { id: payments, label: payments-service, kind: service, position: { x: 4, y: 2.8 } }
+    - { id: db, label: PostgreSQL, kind: database, position: { x: 6.2, y: 0.2 } }
+    - { id: bank, label: Bank API (ext), kind: external, position: { x: 6.2, y: 2.8 } }
+  edges:
+    - [web, gateway]
+    - [gateway, orders]
+    - [gateway, payments]
+    - [orders, payments]
+    - [orders, db]
+    - [payments, bank]
+
+workspace:
+  entryFile: src/discount.js
+  readOnly: [src/index.js, src/payments-client.js, README.md]
+
+terminal:
+  allow:
+    - { command: npm test, description: Run the unit tests }
+    - { command: git diff, description: Show your changes }
+    - { command: git log, description: Show recent commits in the release train }
+    - { command: logs, description: 'Tail production logs, e.g. logs payments' }
+    - { command: rollback, description: Roll production back to the previous release }
+
+pipeline:
+  stages:
+    - { id: build, name: Build, run: npm run build }
+    - { id: lint, name: Lint, run: npm run lint }
+    - { id: test, name: Test, run: npm test }
+    - { id: deploy, name: Deploy, run: null, simulatedSeconds: 2 }
+
+releases: { current: v1.4.1, next: v1.4.2 }
+
+deploy:
+  strategies: [direct, canary]
+  canaryPercent: 10
+
+baselineMetrics: { errorRatePct: 0.4, p95LatencyMs: 180, requestsPerSec: 210 }
+
+faults:
+  - id: payments-timeout
+    trigger: { after: deploy, delaySeconds: 4 }
+    alert:
+      severity: SEV-2
+      title: payments-service returning 5xx, checkout failing
+      service: payments
+    effect:
+      nodes: { payments: down, gateway: degraded }
+      metrics: { errorRatePct: 38, p95LatencyMs: 1100, requestsPerSec: 195 }
+      canary:
+        nodes: { payments: degraded, gateway: degraded }
+        metrics: { errorRatePct: 4.1, p95LatencyMs: 290, requestsPerSec: 205 }
+      logs:
+        - {
+            level: ERROR,
+            service: payments,
+            message: 'charge failed: ETIMEDOUT after 50ms (PAYMENT_TIMEOUT_MS=50)',
+          }
+        - { level: WARN, service: payments, message: 'retry 2/2 exhausted user=u_8812' }
+        - { level: ERROR, service: gateway, message: 'POST /orders 502 upstream payments-service' }
+    resolutions:
+      - { type: rollback }
+      - {
+          type: file-matches-and-redeploy,
+          file: deploy/payments.env,
+          pattern: "^PAYMENT_TIMEOUT_MS=([1-9]\\d{3,})$",
+        }
+
+rubric:
+  - id: fix-correct
+    skill: correctness
+    weight: 30
+    label: Discount applies at exactly Rs 1,000
+    check: { type: hidden-tests, files: [discount.hidden.test.js] }
+    explainPass: The discount applies for totals of 1,000 and above (hidden checks 999, 1000, 1001).
+    explainFail: A hidden check failed. The boundary case total = 1000 is still wrong.
+  - id: boundary-test
+    skill: testing
+    weight: 25
+    label: Boundary case covered by a test
+    check: { type: file-matches, file: tests/discount.test.js, pattern: "^(?!\\s*//).*total:\\s*1000\\b" }
+    explainPass: You added a test for exactly Rs 1,000 before shipping.
+    explainFail: No test covers total = 1000. Off-by-one bugs live exactly at the threshold.
+  - id: safe-deploy
+    skill: deploymentSafety
+    weight: 20
+    label: Safe deployment
+    check: { type: event-occurred, event: deploy.canary, otherwise: 0.7 }
+    explainPass: A canary limited the impact to about 10% of users.
+    explainFail: A direct deploy exposed every user to a bad release.
+  - id: recovery-time
+    skill: recovery
+    weight: 25
+    label: Time to restore service
+    check:
+      type: timing
+      metric: timeToRecoverSeconds
+      thresholds:
+        - { maxSeconds: 120, fraction: 1 }
+        - { maxSeconds: 300, fraction: 0.7 }
+      otherwise: 0.4
+    explainPass: Service restored within the 2-minute target.
+    explainFail: Service took longer than 2 minutes to restore.
+
+hintPenalty: 5
+hints:
+  - when: before-tests-pass
+    text: The bug is in src/discount.js. Look closely at the comparison that decides whether the discount applies.
+  - when: before-tests-pass
+    text: '">" excludes the threshold itself. "Rs 1,000 or more" means ">=".'
+  - when: before-deploy
+    text: 'Prove the fix: in tests/discount.test.js replace the TODO with a test that applyDiscount({ total: 1000 }) returns 900.'
+  - when: incident-active
+    text: >-
+      The alert started right after release v1.4.2. Run git log and open deploy/payments.env:
+      PAYMENT_TIMEOUT_MS was changed from 5000 to 50. Fastest safe recovery: rollback.
+
+debriefRules:
+  - id: use-canary
+    when: { eventMissing: deploy.canary }
+    tip: >-
+      Use a canary when a release bundles other people's changes. Your release train included a payments
+      config change; a 10% canary would have limited the outage to a small slice of users.
+  - id: check-release-train
+    when: { eventMissing: terminal.git-log }
+    tip: >-
+      Check what else is in the release. A quick git log before deploying would have shown
+      "a91f3c2 chore(payments): tune timeout", a config change you did not review.
+  - id: rollback-first
+    when: { eventOccurred: recovery.rollback }
+    tip: >-
+      Rolling back first was right: restore service, then investigate. Next, re-ship your discount fix on
+      its own and raise the timeout change with its author.
+
+# Randomised variants (THRESHOLD/RATE substitution in template + hidden tests) arrive with the engine in Phase 3.
+variants: []
