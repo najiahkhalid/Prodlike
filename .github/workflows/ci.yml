@@ -29,6 +29,10 @@ jobs:
           --health-cmd "pg_isready -U prodlike" --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       DATABASE_URL: postgresql://prodlike:prodlike@localhost:5432/prodlike?schema=public
+      # API integration tests (they truncate this database)
+      DATABASE_URL_TEST: postgresql://prodlike:prodlike@localhost:5432/prodlike?schema=public
+      # Browser tests use their own database
+      E2E_DATABASE_URL: postgresql://prodlike:prodlike@localhost:5432/prodlike_e2e?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -46,6 +50,22 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm scenarios:validate
+      - name: Prepare the end-to-end database (migrate + seed admin)
+        run: |
+          PGPASSWORD=prodlike psql -h localhost -U prodlike -c 'CREATE DATABASE prodlike_e2e'
+          DATABASE_URL=$E2E_DATABASE_URL pnpm --filter @prodlike/api prisma:deploy
+          DATABASE_URL=$E2E_DATABASE_URL ADMIN_EMAIL=admin@e2e.test ADMIN_PASSWORD=admin-password-123 \
+            pnpm --filter @prodlike/api db:seed
+      - name: Install Playwright Chromium
+        run: pnpm --filter @prodlike/e2e exec playwright install --with-deps chromium
+      - name: End-to-end tests (Playwright)
+        run: pnpm --filter @prodlike/e2e e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
 
   scenario-images:
     name: Scenario sandbox images
@@ -90,5 +110,16 @@ jobs:
           grep -q '"database":"up"' /tmp/health.json
           curl -skf https://localhost/ | grep -q "Platform status"
           echo "Web page served over HTTPS"
+          curl -skf https://localhost/api/scenarios | grep -q '"slug":"discount-bug"'
+          echo "Scenario synced into the database"
+      - name: Sign up through the stack (HTTPS + secure cookies)
+        run: |
+          code=$(curl -sk -o /tmp/reg.json -w '%{http_code}' -c /tmp/jar -H 'content-type: application/json' \
+            -d '{"name":"CI Bot","email":"ci@stack.test","password":"ci-password-123"}' https://localhost/api/auth/register)
+          cat /tmp/reg.json; echo
+          test "$code" = "201"
+          grep -q 'pl_at' /tmp/jar
+          curl -skf -b /tmp/jar https://localhost/api/auth/me | grep -q '"email":"ci@stack.test"'
+          echo "Registered and authenticated through Caddy"
       - if: failure()
         run: docker compose -f infra/docker-compose.yml logs --tail 100

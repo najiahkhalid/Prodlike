@@ -1,18 +1,75 @@
-import { Card } from '@prodlike/ui';
-import { AppSidebar } from '@/components/AppSidebar';
+import Link from 'next/link';
+import { Card, buttonClasses } from '@prodlike/ui';
+import type { CatalogueResponse } from '@prodlike/shared';
+import { AppShell, DeniedNotice } from '@/components/AppShell';
+import { OnboardingTour } from '@/components/OnboardingTour';
+import { ScenarioCard } from '@/components/ScenarioCard';
+import { requireMe, serverApi } from '@/lib/api';
 
-// Phase 0 shell only: authentication and real data arrive in Phase 1 (FR-01, FR-02).
-export default function DashboardPage() {
+export const metadata = { title: 'Dashboard' };
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ denied?: string }>;
+}) {
+  const [{ denied }, me] = await Promise.all([searchParams, requireMe('/dashboard')]);
+  const catalogue = await serverApi<CatalogueResponse>('/scenarios');
+  const scenarios = catalogue.ok ? catalogue.data.items : [];
+  const attempted = scenarios.filter((s) => s.bestScore !== null);
+  const next = scenarios.find((s) => s.bestScore === null) ?? scenarios[0];
+  const first = me.name.split(' ')[0];
+
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[240px_1fr]">
-      <AppSidebar role="LEARNER" active="/dashboard" userName="Demo Learner" />
-      <main className="min-w-0 px-9 py-7">
-        <p className="text-[13px] text-ink-muted">Learner</p>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Card className="mt-6">
-          <p>This is the Phase 0 app shell. Sign-up, log-in and the scenario catalogue land in Phase 1.</p>
+    <AppShell
+      me={me}
+      active="/dashboard"
+      crumbs="Learner"
+      title={`Welcome, ${first}`}
+      actions={
+        <Link href="/scenarios" className={buttonClasses('primary')}>
+          Browse scenarios
+        </Link>
+      }
+    >
+      {!me.onboarded && <OnboardingTour />}
+      <DeniedNotice path={denied} />
+
+      <div className="grid gap-5 md:grid-cols-3">
+        <Card>
+          <div className="text-[13px] font-medium text-ink-muted">Scenarios completed</div>
+          <div className="mt-1 font-head text-3xl font-bold text-ink">{attempted.length}</div>
+          <div className="text-[13px] text-ink-muted">of {scenarios.length} available</div>
         </Card>
-      </main>
-    </div>
+        <Card>
+          <div className="text-[13px] font-medium text-ink-muted">Best average score</div>
+          <div className="mt-1 font-head text-3xl font-bold text-ink">
+            {attempted.length
+              ? `${Math.round(attempted.reduce((a, s) => a + (s.bestScore ?? 0), 0) / attempted.length)}%`
+              : '—'}
+          </div>
+          <div className="text-[13px] text-ink-muted">Scores and skill trends arrive with the debrief</div>
+        </Card>
+        <Card>
+          <div className="text-[13px] font-medium text-ink-muted">Account</div>
+          <div className="mt-1 truncate font-semibold text-ink">{me.email}</div>
+          <div className="text-[13px] text-ink-muted">{me.organisation ?? 'No organisation set'}</div>
+        </Card>
+      </div>
+
+      {next && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-xl font-semibold">{attempted.length ? 'Up next' : 'Start here'}</h2>
+          <div className="max-w-sm">
+            <ScenarioCard s={next} href={`/scenarios/${next.slug}`} />
+          </div>
+        </section>
+      )}
+      {!catalogue.ok && (
+        <p role="alert" className="mt-6 text-bad-text">
+          {catalogue.error.message} {catalogue.error.action}
+        </p>
+      )}
+    </AppShell>
   );
 }

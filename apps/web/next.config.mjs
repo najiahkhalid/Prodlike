@@ -13,6 +13,7 @@ const nextConfig = {
   outputFileTracingRoot: join(here, '..', '..'),
   // packages/ui ships TypeScript source; Next compiles it.
   transpilePackages: ['@prodlike/ui'],
+  // The browser talks to the API through same-origin /api: see src/app/api/[...path]/route.ts.
 };
 
 export default nextConfig;

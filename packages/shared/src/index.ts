@@ -2,3 +2,5 @@
 export * from './scenario/schema';
 export * from './events';
 export * from './api';
+export * from './auth';
+export * from './catalogue';

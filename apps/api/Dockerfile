@@ -12,5 +12,5 @@ RUN pnpm install --frozen-lockfile \
 
 ENV NODE_ENV=production
 EXPOSE 4000
-# Apply pending migrations, then start.
-CMD ["sh", "-c", "pnpm --filter @prodlike/api prisma:deploy && node apps/api/dist/main.js"]
+# Apply pending migrations, seed (admin account + badges, idempotent), then start.
+CMD ["sh", "-c", "pnpm --filter @prodlike/api prisma:deploy && pnpm --filter @prodlike/api db:seed && node apps/api/dist/main.js"]

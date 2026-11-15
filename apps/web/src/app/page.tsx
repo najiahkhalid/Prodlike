@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { Badge, Card, StatusPill, buttonClasses } from '@prodlike/ui';
+import type { CatalogueResponse } from '@prodlike/shared';
 import { PublicNav } from '@/components/PublicNav';
-import { getHealth } from '@/lib/api';
+import { ScenarioCard } from '@/components/ScenarioCard';
+import { getHealth, serverApi } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +16,8 @@ const STEPS = [
 ] as const;
 
 export default async function LandingPage() {
-  const health = await getHealth();
+  const [health, catalogue] = await Promise.all([getHealth(), serverApi<CatalogueResponse>('/scenarios')]);
+  const scenarios = catalogue.ok ? catalogue.data.items.slice(0, 4) : [];
 
   return (
     <>
@@ -30,18 +33,19 @@ export default async function LandingPage() {
             CI/CD, then handle whatever breaks next. Every decision is scored and explained.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/demo" className={buttonClasses('primary', 'lg')}>
-              ▶ Try a 5-minute demo, no sign-up
+            <Link href="/signup" className={buttonClasses('primary', 'lg')}>
+              Create a free account
             </Link>
             <a href="#how" className={buttonClasses('secondary', 'lg')}>
               How it works
             </a>
           </div>
+          <p className="mt-3 text-sm text-ink-muted">Free for students. A no-sign-up demo is coming soon.</p>
         </div>
       </header>
 
       <section id="how" className="mx-auto max-w-6xl px-6 py-16">
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent-text">How it works</p>
+        <p className="eyebrow">How it works</p>
         <h2 className="mt-2 text-3xl font-bold">One scenario. The whole engineering lifecycle.</h2>
         <ol className="mt-8 grid gap-0 md:grid-cols-5">
           {STEPS.map(([n, title, text]) => (
@@ -52,6 +56,39 @@ export default async function LandingPage() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {scenarios.length > 0 && (
+        <section id="scenarios" className="border-y border-surface-border bg-white py-16">
+          <div className="mx-auto max-w-6xl px-6">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow">Scenario library</p>
+                <h2 className="mt-2 text-3xl font-bold">Start with a real-feeling ticket</h2>
+              </div>
+              <Link href="/scenarios" className={buttonClasses('secondary')}>
+                Browse all scenarios →
+              </Link>
+            </div>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {scenarios.map((s) => (
+                <ScenarioCard key={s.slug} s={s} href={`/scenarios/${s.slug}`} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section id="instructors" className="mx-auto max-w-6xl px-6 py-16">
+        <p className="eyebrow">For instructors</p>
+        <h2 className="mt-2 max-w-2xl text-3xl font-bold">Practical labs that grade themselves.</h2>
+        <p className="mt-3 max-w-2xl">
+          Create a cohort, share a join code, assign scenarios with deadlines, and get every attempt scored on
+          a transparent rubric.
+        </p>
+        <Link href="/signup?role=instructor" className={`${buttonClasses('primary')} mt-6`}>
+          Sign up as an instructor
+        </Link>
       </section>
 
       <section aria-label="System status" className="mx-auto max-w-6xl px-6 pb-16">
