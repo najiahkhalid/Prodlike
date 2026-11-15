@@ -4,8 +4,9 @@ Prodlike is a CS344 Web Engineering (NUST SEECS) group project by Team Prodlike:
 
 ## Where things are
 
-- Requirements: SRS from Assignment 1 (FR-01..FR-20, NFR-01..NFR-14). The A2 clickable prototype is the visual reference for every page.
-- Build plan: 7 phases over about 8 weeks, ending at semester end. The demo runs on a laptop with Docker Compose; there is no cloud.
+- **Requirements:** `docs/project/proposal-and-srs.md` is the full Assignment 1 proposal + SRS: FR-01..FR-20 and NFR-01..NFR-14 word for word, audience, success metrics, sitemap. Read it before building a feature.
+- **Build plan:** `docs/project/build-plan.md`: 7 phases over about 8 weeks (ending at semester end), with goals, owners, exit criteria, risks. The demo runs on a laptop with Docker Compose; there is no cloud.
+- **Design:** `docs/design/`: the A2 clickable prototype (`prototype/*.html`), annotated wireframes and navigation flow. Every page must match it; see `docs/design/README.md`.
 - Architecture decisions: `docs/adr/001..005`. Scenario format: `packages/shared/src/scenario/schema.ts` and `docs/scenario-authoring.md`.
 
 ## Phase status

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scenarios — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      .filters {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .filters .group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .filters .lbl {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-right: 4px;
+      }
+      .sc {
+        display: flex;
+        flex-direction: column;
+      }
+      .sc .company {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+      .sc .tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .sc .foot {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+      }
+      .empty {
+        text-align: center;
+        padding: 48px;
+        color: var(--muted);
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="sidebar" id="sidebar" aria-label="Learner navigation"></nav>
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="crumbs"><a href="dashboard.html">Dashboard</a> / Scenarios</div>
+            <h1>Scenario Catalogue</h1>
+          </div>
+          <input
+            class="input"
+            style="max-width: 280px"
+            placeholder="Search scenarios…"
+            id="q"
+            aria-label="Search scenarios"
+          />
+        </div>
+
+        <div class="filters" role="group" aria-label="Filters">
+          <div class="group" data-key="level">
+            <span class="lbl">Difficulty</span> <button class="chip on" data-v="all">All</button
+            ><button class="chip" data-v="Beginner">Beginner</button
+            ><button class="chip" data-v="Intermediate">Intermediate</button
+            ><button class="chip" data-v="Advanced">Advanced</button>
+          </div>
+          <div class="group" data-key="skill">
+            <span class="lbl">Skill</span> <button class="chip on" data-v="all">All</button
+            ><button class="chip" data-v="Bug fix">Bug fix</button
+            ><button class="chip" data-v="Feature">Feature</button
+            ><button class="chip" data-v="Rollback">Rollback</button
+            ><button class="chip" data-v="Config">Config</button>
+          </div>
+        </div>
+
+        <div class="grid g3" id="list"></div>
+        <div class="empty" id="empty">
+          No scenarios match these filters. <a href="#" id="reset">Clear filters</a>
+        </div>
+      </main>
+    </div>
+    <script src="assets/app.js"></script>
+    <script>
+      renderSidebar('Scenarios', 'learner');
+      const DATA = [
+        {
+          t: 'The Rs 1,000 Discount Bug',
+          c: 'ByteBite Food Delivery',
+          level: 'Beginner',
+          skills: ['Bug fix', 'Rollback'],
+          time: '5–10 min',
+          best: '86%',
+        },
+        {
+          t: 'Add Appointment Reminders',
+          c: 'CareSlot Clinics',
+          level: 'Intermediate',
+          skills: ['Feature'],
+          time: '35 min',
+          best: '64%',
+        },
+        {
+          t: 'Friday Deploy Gone Wrong',
+          c: 'PayLane Wallet',
+          level: 'Intermediate',
+          skills: ['Rollback'],
+          time: '30 min',
+          best: null,
+          due: 'Due in 2 days',
+        },
+        {
+          t: 'The Missing Env Variable',
+          c: 'ShipFast Logistics',
+          level: 'Advanced',
+          skills: ['Config', 'Rollback'],
+          time: '45 min',
+          best: null,
+        },
+        {
+          t: 'Slow Checkout After Release',
+          c: 'ByteBite Food Delivery',
+          level: 'Advanced',
+          skills: ['Bug fix', 'Config'],
+          time: '40 min',
+          best: null,
+          soon: true,
+        },
+        {
+          t: 'Paginate the Orders API',
+          c: 'ShipFast Logistics',
+          level: 'Beginner',
+          skills: ['Feature'],
+          time: '20 min',
+          best: null,
+        },
+      ];
+      const lvl = { Beginner: 'ok', Intermediate: 'warn', Advanced: 'bad' };
+      const state = { level: 'all', skill: 'all', q: '' };
+      function render() {
+        const items = DATA.filter(
+          (d) =>
+            (state.level === 'all' || d.level === state.level) &&
+            (state.skill === 'all' || d.skills.includes(state.skill)) &&
+            d.t.toLowerCase().includes(state.q),
+        );
+        list.innerHTML = items
+          .map(
+            (d) => `
+      <a class="card sc" href="${d.soon ? '#' : 'brief.html'}" ${d.soon ? 'data-toast="This scenario is still being authored — coming next sprint."' : ''}>
+        <div class="row between"><span class="badge ${lvl[d.level]}">${d.level}</span>${d.due ? `<span class="badge warn">⏱ ${d.due}</span>` : d.soon ? '<span class="badge">Coming soon</span>' : ''}</div>
+        <h3 class="mt2">${d.t}</h3>
+        <div class="company">${d.c}</div>
+        <div class="tags">${d.skills.map((s) => `<span class="badge">${s}</span>`).join('')}</div>
+        <div class="foot"><span>⏱ ${d.time}</span><span>${d.best ? 'Best: <b style="color:var(--text)">' + d.best + '</b>' : 'Not attempted'}</span></div>
+      </a>`,
+          )
+          .join('');
+        empty.style.display = items.length ? 'none' : 'block';
+      }
+      document.querySelectorAll('.filters .group').forEach((g) =>
+        g.addEventListener('click', (e) => {
+          const b = e.target.closest('.chip');
+          if (!b) return;
+          g.querySelectorAll('.chip').forEach((x) => x.classList.toggle('on', x === b));
+          state[g.dataset.key] = b.dataset.v;
+          render();
+        }),
+      );
+      q.addEventListener('input', () => {
+        state.q = q.value.toLowerCase();
+        render();
+      });
+      reset.addEventListener('click', (e) => {
+        e.preventDefault();
+        location.reload();
+      });
+      render();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Debrief — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      .score-hero {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 32px;
+        align-items: center;
+      }
+      .ring {
+        position: relative;
+        width: 200px;
+        height: 200px;
+      }
+      .ring svg {
+        transform: rotate(-90deg);
+      }
+      .ring .num {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .ring .num b {
+        font: 700 46px/1 var(--font-head);
+        color: var(--text);
+        display: block;
+      }
+      .rb {
+        display: grid;
+        grid-template-columns: 190px 1fr 70px;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+      }
+      .rb:last-child {
+        border: 0;
+      }
+      .tl {
+        position: relative;
+        padding-left: 26px;
+      }
+      .tl::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: var(--border);
+      }
+      .tl .ev {
+        position: relative;
+        padding: 0 0 18px;
+        font-size: 14px;
+      }
+      .tl .ev::before {
+        content: '';
+        position: absolute;
+        left: -23px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid var(--primary);
+      }
+      .tl .ev.good::before {
+        border-color: var(--ok);
+      }
+      .tl .ev.bad::before {
+        border-color: var(--bad);
+      }
+      .tl .ev.warn::before {
+        border-color: var(--warn);
+      }
+      .tl .t {
+        font: 600 12px var(--font-mono);
+        color: var(--muted);
+      }
+      code,
+      .mono {
+        font-variant-ligatures: none;
+        font-feature-settings: 'calt' 0;
+      }
+      .senior {
+        border-left: 4px solid var(--accent);
+        background: var(--accent-tint);
+      }
+      .senior li {
+        margin: 6px 0;
+      }
+      .guest-cta {
+        background: var(--secondary);
+        color: #cbd5e1;
+        border: 0;
+        display: none;
+      }
+      .guest-cta h3 {
+        color: #fff;
+      }
+      .brief-wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 28px 24px 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav" id="guestNav" hidden>
+      <div class="container">
+        <a class="logo" href="index.html"
+          ><span class="logo-mark"
+            ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+              <path d="M4 17l6-6-6-6" />
+              <path d="M12 19h8" /></svg></span
+          >Prodlike</a
+        >
+        <div class="spacer"></div>
+        <a class="btn btn-primary" href="login.html">Sign up free</a>
+      </div>
+    </nav>
+    <div class="app" id="appShell">
+      <nav class="sidebar" id="sidebar" aria-label="Learner navigation"></nav>
+      <main class="main" id="content">
+        <div class="page-head">
+          <div>
+            <div class="crumbs"><a href="dashboard.html">Dashboard</a> / Debrief</div>
+            <h1>Debrief: The Rs 1,000 Discount Bug</h1>
+            <div class="small muted mt1" id="sub">Attempt 2 · completed just now</div>
+          </div>
+          <div class="row">
+            <a class="btn btn-secondary" href="brief.html">⟲ Retry scenario</a
+            ><a class="btn btn-primary" href="catalogue.html">Next scenario →</a>
+          </div>
+        </div>
+
+        <div class="card guest-cta mb2" id="guestCta">
+          <div class="row between wrap">
+            <div>
+              <h3 class="mb0">Nice work! Save this result?</h3>
+              <p class="mb0 small">
+                Create a free account to keep your score, earn badges and unlock 3 more scenarios.
+              </p>
+            </div>
+            <a class="btn btn-primary btn-lg" href="login.html">Create free account</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="score-hero">
+            <div class="ring" role="img" id="ringWrap">
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="86" fill="none" stroke="#E2E8F0" stroke-width="16" />
+                <circle
+                  id="arc"
+                  cx="100"
+                  cy="100"
+                  r="86"
+                  fill="none"
+                  stroke="#4F46E5"
+                  stroke-width="16"
+                  stroke-linecap="round"
+                  stroke-dasharray="540"
+                  stroke-dashoffset="540"
+                  style="transition: stroke-dashoffset 1s ease-out"
+                />
+              </svg>
+              <div class="num">
+                <div><b id="total">0</b><span class="small muted">out of 100</span></div>
+              </div>
+            </div>
+            <div>
+              <div class="row wrap" id="badges"></div>
+              <h2 class="mt2 mb0" id="verdict" style="font-size: 26px"></h2>
+              <p class="muted mt1" id="summary"></p>
+              <div class="row wrap small">
+                <span>⏱ Total time <b class="mono" id="tTime"></b></span
+                ><span>🔥 Time to recover <b class="mono" id="tMttr"></b></span
+                ><span>💡 Hints <b id="tHints"></b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid mt3" style="grid-template-columns: 1.2fr 1fr; align-items: start">
+          <div class="card">
+            <h3>Rubric breakdown</h3>
+            <div id="rubric"></div>
+          </div>
+          <div class="card">
+            <h3>Attempt timeline</h3>
+            <div class="tl mt2" id="tl"></div>
+          </div>
+        </div>
+
+        <div class="card senior mt3">
+          <h3>💬 What a senior engineer would do differently</h3>
+          <ul id="senior" class="mb0"></ul>
+        </div>
+
+        <h3 class="mt4">Recommended next</h3>
+        <div class="grid g3">
+          <a class="card" href="brief.html"
+            ><span class="badge warn">Intermediate</span>
+            <h4 class="mt2">Friday Deploy Gone Wrong</h4>
+            <p class="small muted mb0">Practise canary analysis and safe rollbacks.</p></a
+          >
+          <a class="card" href="brief.html"
+            ><span class="badge bad">Advanced</span>
+            <h4 class="mt2">The Missing Env Variable</h4>
+            <p class="small muted mb0">Config incidents without an obvious code change.</p></a
+          >
+          <a class="card" href="brief.html"
+            ><span class="badge warn">Intermediate</span>
+            <h4 class="mt2">Add Appointment Reminders</h4>
+            <p class="small muted mb0">Strengthen your weakest skill: Testing.</p></a
+          >
+        </div>
+      </main>
+    </div>
+    <script src="assets/app.js"></script>
+    <script>
+      const guest = new URLSearchParams(location.search).get('guest');
+      if (guest) {
+        sidebar.remove();
+        appShell.style.display = 'block';
+        guestNav.hidden = false;
+        content.classList.add('brief-wrap');
+        guestCta.style.display = 'block';
+        sub.textContent = 'Guest demo · not saved';
+        document.querySelector('.crumbs').innerHTML = '<a href="index.html">Home</a> / Demo debrief';
+      } else renderSidebar('Scenarios', 'learner');
+
+      let r = null;
+      try {
+        r = JSON.parse(localStorage.getItem('prodlike-result'));
+      } catch (e) {}
+      // Sample result if the page is opened directly (e.g. from the dashboard)
+      r = r || {
+        correctness: 30,
+        testing: 25,
+        safety: 14,
+        recovery: 25,
+        hints: 1,
+        mttr: 124,
+        method: 'rollback',
+        strategy: 'direct',
+        total_time: 512,
+        fixed: true,
+        boundary: true,
+      };
+      const fmt = (s) => `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
+      const pen = r.hints * 5;
+      const total = Math.max(0, r.correctness + r.testing + r.safety + r.recovery - pen);
+      document.getElementById('total').textContent = total;
+      ringWrap.setAttribute('aria-label', `Score ${total} out of 100`);
+      setTimeout(() => (arc.style.strokeDashoffset = 540 * (1 - total / 100)), 100);
+      arc.style.stroke = total >= 80 ? '#16A34A' : total >= 60 ? '#4F46E5' : '#D97706';
+      verdict.textContent =
+        total >= 80
+          ? 'Production-ready instincts.'
+          : total >= 60
+            ? 'Solid — a few habits to build.'
+            : 'Good start — review the debrief and retry.';
+      summary.textContent = `You ${r.fixed ? 'fixed the discount boundary' : 'shipped without fixing the boundary bug'}, ${r.boundary ? 'proved it with a test' : 'but did not add a boundary test'}, deployed ${r.strategy === 'canary' ? 'safely with a canary' : 'directly to all traffic'} and restored service by ${r.method === 'rollback' ? 'rolling back' : 'shipping a config hotfix'}.`;
+      tTime.textContent = fmt(r.total_time);
+      tMttr.textContent = fmt(r.mttr);
+      tHints.textContent = `${r.hints} (−${pen})`;
+      const b = [];
+      if (r.mttr <= 120) b.push('<span class="badge ok">🏅 Clean Rollback</span>');
+      if (r.boundary) b.push('<span class="badge primary">🧪 Edge-Case Hunter</span>');
+      if (r.strategy === 'canary') b.push('<span class="badge accent">🐤 Canary Keeper</span>');
+      badges.innerHTML = b.join('') || '<span class="badge">No badges this time</span>';
+
+      const rows = [
+        [
+          'Correctness',
+          r.correctness,
+          30,
+          r.fixed
+            ? 'Discount applies at exactly Rs 1,000 (hidden checks: 999, 1000, 1001).'
+            : 'Boundary still excluded: hidden check total=1000 failed.',
+        ],
+        [
+          'Testing',
+          r.testing,
+          25,
+          r.boundary
+            ? 'Boundary test added before shipping.'
+            : 'Suite was run, but no test covers total = 1000.',
+        ],
+        [
+          'Deployment safety',
+          r.safety,
+          20,
+          r.strategy === 'canary'
+            ? 'Canary limited impact to ~10% of users.'
+            : 'Direct deploy exposed 100% of users to a bad release.',
+        ],
+        [
+          'Recovery',
+          r.recovery,
+          25,
+          `Service restored in ${fmt(r.mttr)} via ${r.method}. Target: under 2 minutes.`,
+        ],
+      ];
+      rubric.innerHTML =
+        rows
+          .map(
+            ([n, v, m, note]) =>
+              `<div class="rb"><div><b style="color:var(--text)">${n}</b><div class="xsmall muted">${note}</div></div><div class="bar"><i style="width:${(v / m) * 100}%;background:${v / m >= 0.8 ? 'var(--ok)' : v / m >= 0.5 ? 'var(--primary)' : 'var(--warn)'}"></i></div><b class="mono" style="text-align:right">${v}/${m}</b></div>`,
+          )
+          .join('') +
+        (pen
+          ? `<div class="rb"><div><b style="color:var(--text)">Hints used</b><div class="xsmall muted">${r.hints} × −5</div></div><div></div><b class="mono" style="text-align:right;color:var(--bad)">−${pen}</b></div>`
+          : '');
+
+      const ev = [
+        ['00:00', '', 'Opened ticket BYTE-482 and explored <code>src/discount.js</code>'],
+        [
+          '01:35',
+          r.fixed ? 'good' : 'bad',
+          r.fixed
+            ? 'Changed <code>&gt;</code> to <code>&gt;=</code> — correct fix'
+            : 'Boundary condition left unchanged',
+        ],
+        [
+          '02:50',
+          r.boundary ? 'good' : 'warn',
+          r.boundary
+            ? 'Added boundary test <code>total: 1000</code>'
+            : 'Ran tests without adding a boundary case',
+        ],
+        ['03:40', r.strategy === 'canary' ? 'good' : 'warn', `Deployed v1.4.2 (${r.strategy})`],
+        ['04:15', 'bad', 'ALERT: payments-service 5xx — PAYMENT_TIMEOUT_MS=50 shipped in same release'],
+        [
+          `${String(Math.floor((255 + r.mttr) / 60)).padStart(2, '0')}:${String((255 + r.mttr) % 60).padStart(2, '0')}`,
+          'good',
+          `Recovered by ${r.method} after ${fmt(r.mttr)}`,
+        ],
+      ];
+      tl.innerHTML = ev
+        .map(([t, c, h]) => `<div class="ev ${c}"><div class="t">${t}</div>${h}</div>`)
+        .join('');
+
+      const tips = [];
+      if (r.strategy !== 'canary')
+        tips.push(
+          "<b>Use a canary when a release bundles other people's changes.</b> Your release train included a payments config change; a 10% canary would have limited the outage to a small slice of users.",
+        );
+      tips.push(
+        "<b>Check what else is in the release.</b> A quick <code>git log</code> before deploying would have shown <code>a91f3c2 chore(payments): tune timeout</code> — a config change you didn't review.",
+      );
+      if (r.method === 'rollback')
+        tips.push(
+          '<b>Rolling back first was right</b> — restore service, then investigate. Next, re-ship your discount fix on its own, and raise the timeout change with its author.',
+        );
+      else
+        tips.push(
+          '<b>A hotfix worked here, but rollback is usually faster and safer</b> when the cause is still uncertain.',
+        );
+      if (!r.boundary)
+        tips.push(
+          '<b>Test the boundary, not just either side of it.</b> Off-by-one bugs live at exactly the threshold.',
+        );
+      senior.innerHTML = tips.map((t) => `<li>${t}</li>`).join('');
+    </script>
+  </body>
+</html>

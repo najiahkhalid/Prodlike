@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workspace · Rs 1,000 Discount Bug — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      /* Dark "console" theme for the workspace only */
+      body.ws {
+        --d-bg: #0b1120;
+        --d-panel: #0f172a;
+        --d-raised: #1e293b;
+        --d-border: #1e293b;
+        --d-line: #273449;
+        --d-text: #e2e8f0;
+        --d-muted: #94a3b8;
+        --d-ok: #22c55e;
+        --d-warn: #f59e0b;
+        --d-bad: #f87171;
+        --d-live: #22d3ee;
+        background: var(--d-bg);
+        color: var(--d-text);
+        height: 100vh;
+        overflow: hidden;
+        font-size: 14px;
+      }
+      .ws-grid {
+        display: grid;
+        height: 100vh;
+        grid-template-columns: 210px minmax(0, 1fr) 470px;
+        grid-template-rows: 52px minmax(0, 1fr) 250px;
+      }
+      .topbar {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 0 14px;
+        background: var(--d-panel);
+        border-bottom: 1px solid var(--d-border);
+      }
+      .topbar .logo {
+        color: #fff;
+        font-size: 17px;
+      }
+      .topbar .logo-mark {
+        width: 26px;
+        height: 26px;
+        background: var(--primary);
+      }
+      .topbar .title {
+        font-weight: 600;
+        color: #fff;
+      }
+      .topbar .title small {
+        color: var(--d-muted);
+        font-weight: 400;
+        margin-left: 6px;
+      }
+      .steps {
+        display: flex;
+        gap: 4px;
+        margin-left: 8px;
+      }
+      .steps span {
+        font: 600 11px/1 var(--font-body);
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--d-raised);
+        color: var(--d-muted);
+        letter-spacing: 0.02em;
+      }
+      .steps span.done {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--d-ok);
+      }
+      .steps span.now {
+        background: var(--primary);
+        color: #fff;
+      }
+      .timer {
+        font: 600 14px var(--font-mono);
+        color: var(--d-text);
+        padding: 6px 10px;
+        background: var(--d-raised);
+        border-radius: 6px;
+      }
+      .wbtn {
+        font: 600 13px/1 var(--font-body);
+        padding: 9px 13px;
+        border-radius: 6px;
+        border: 1px solid var(--d-line);
+        background: var(--d-raised);
+        color: var(--d-text);
+        cursor: pointer;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .wbtn:hover:not([disabled]) {
+        border-color: #475569;
+      }
+      .wbtn.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+      }
+      .wbtn.primary:hover:not([disabled]) {
+        background: var(--primary-hover);
+      }
+      .wbtn.danger {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        color: #fff;
+      }
+      .wbtn.go {
+        background: #15803d;
+        border-color: #15803d;
+        color: #fff;
+      }
+      .wbtn[disabled] {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .spacer {
+        flex: 1;
+      }
+
+      .pane {
+        background: var(--d-panel);
+        border-right: 1px solid var(--d-border);
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .pane-h {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 38px;
+        padding: 0 8px;
+        border-bottom: 1px solid var(--d-border);
+        flex: none;
+      }
+      .pane-h .lbl {
+        font: 600 11px/1 var(--font-body);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--d-muted);
+        padding: 0 6px;
+      }
+      .tab {
+        font: 500 13px/1 var(--font-body);
+        color: var(--d-muted);
+        padding: 11px 12px;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .tab:hover {
+        color: var(--d-text);
+      }
+      .tab.on {
+        color: #fff;
+        border-bottom-color: var(--d-live);
+      }
+      .tab .count {
+        background: #dc2626;
+        color: #fff;
+        border-radius: 999px;
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+
+      /* file tree */
+      .tree {
+        padding: 8px 6px;
+        font: 13px/1 var(--font-mono);
+        overflow: auto;
+      }
+      .tree div {
+        padding: 7px 8px;
+        border-radius: 5px;
+        color: var(--d-muted);
+        white-space: nowrap;
+      }
+      .tree .f {
+        cursor: pointer;
+      }
+      .tree .f:hover {
+        background: var(--d-raised);
+        color: var(--d-text);
+      }
+      .tree .f.on {
+        background: rgba(79, 70, 229, 0.25);
+        color: #fff;
+      }
+      .tree .d {
+        color: #64748b;
+      }
+      .tree .mod::after {
+        content: ' M';
+        color: var(--d-warn);
+        font-weight: 600;
+      }
+      .brief-mini {
+        margin-top: auto;
+        padding: 12px;
+        border-top: 1px solid var(--d-border);
+        font-size: 12px;
+        color: var(--d-muted);
+        line-height: 1.5;
+      }
+      .brief-mini b {
+        color: var(--d-text);
+      }
+
+      /* editor */
+      .editor {
+        position: relative;
+        flex: 1;
+        overflow: auto;
+        background: #0b1120;
+        display: flex;
+      }
+      .gutter {
+        font: 13px/22px var(--font-mono);
+        color: #475569;
+        text-align: right;
+        padding: 14px 12px 14px 14px;
+        user-select: none;
+        flex: none;
+      }
+      .code-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+      }
+      .code-wrap pre,
+      .code-wrap textarea {
+        margin: 0;
+        padding: 14px 16px 14px 0;
+        font: 13px/22px var(--font-mono);
+        white-space: pre;
+        tab-size: 2;
+        border: 0;
+        width: 100%;
+        min-height: 100%;
+      }
+      .code-wrap pre {
+        color: #cbd5e1;
+        pointer-events: none;
+      }
+      .code-wrap textarea {
+        position: absolute;
+        inset: 0;
+        background: transparent;
+        color: transparent;
+        caret-color: #fff;
+        resize: none;
+        outline: none;
+        overflow: hidden;
+      }
+      .code-wrap textarea[readonly] {
+        caret-color: transparent;
+      }
+      .code-wrap pre,
+      .code-wrap textarea,
+      .term,
+      .term-in,
+      .plog {
+        font-variant-ligatures: none !important;
+        font-feature-settings:
+          'calt' 0,
+          'liga' 0 !important;
+      }
+      .k {
+        color: #c084fc;
+      }
+      .s {
+        color: #86efac;
+      }
+      .n {
+        color: #fdba74;
+      }
+      .c {
+        color: #64748b;
+        font-style: italic;
+      }
+      .fn {
+        color: #7dd3fc;
+      }
+      .edit-bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 12px;
+        border-top: 1px solid var(--d-border);
+        background: var(--d-panel);
+        flex: none;
+        font-size: 12px;
+        color: var(--d-muted);
+      }
+
+      /* terminal */
+      .term-pane {
+        grid-column: 1 / 3;
+        border-top: 1px solid var(--d-border);
+      }
+      .term {
+        flex: 1;
+        overflow: auto;
+        padding: 10px 14px;
+        font: 13px/1.65 var(--font-mono);
+        color: #cbd5e1;
+        background: #020617;
+      }
+      .term .p {
+        color: var(--d-live);
+      }
+      .term .ok {
+        color: var(--d-ok);
+      }
+      .term .bad {
+        color: var(--d-bad);
+      }
+      .term .warn {
+        color: var(--d-warn);
+      }
+      .term .dim {
+        color: #64748b;
+      }
+      .term-in {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 14px;
+        background: #020617;
+        border-top: 1px solid var(--d-border);
+        font: 13px var(--font-mono);
+      }
+      .term-in input {
+        flex: 1;
+        background: transparent;
+        border: 0;
+        color: #fff;
+        font: inherit;
+        outline: none;
+      }
+
+      /* system pane */
+      .sys {
+        grid-row: 2 / 4;
+        grid-column: 3;
+        border-right: 0;
+        border-left: 1px solid var(--d-border);
+      }
+      .sys-body {
+        flex: 1;
+        overflow: auto;
+        padding: 14px;
+      }
+      .view-toggle {
+        margin-left: auto;
+        display: flex;
+        background: var(--d-raised);
+        border-radius: 6px;
+        padding: 3px;
+      }
+      .view-toggle button {
+        border: 0;
+        background: none;
+        color: var(--d-muted);
+        font: 600 12px/1 var(--font-body);
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .view-toggle button.on {
+        background: var(--primary);
+        color: #fff;
+      }
+      .map-box {
+        background: radial-gradient(circle at 50% 40%, #13203a, #0b1120 70%);
+        border: 1px solid var(--d-border);
+        border-radius: 10px;
+      }
+      .legend {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 11px;
+        color: var(--d-muted);
+        margin: 10px 2px 0;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .metric {
+        background: var(--d-raised);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .metric .l {
+        font-size: 11px;
+        color: var(--d-muted);
+      }
+      .metric .v {
+        font: 600 18px var(--font-mono);
+        color: #fff;
+      }
+      .metric svg {
+        width: 100%;
+        height: 28px;
+        display: block;
+        margin-top: 4px;
+      }
+      .metric.alarm .v {
+        color: var(--d-bad);
+      }
+
+      .stages {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+      }
+      .stage {
+        background: var(--d-raised);
+        border-radius: 8px;
+        padding: 10px;
+        border-top: 3px solid #334155;
+      }
+      .stage .nm {
+        font-weight: 600;
+        color: #fff;
+        font-size: 13px;
+      }
+      .stage .st {
+        font-size: 11px;
+        color: var(--d-muted);
+        margin-top: 4px;
+      }
+      .stage.run {
+        border-top-color: var(--d-live);
+      }
+      .stage.run .st {
+        color: var(--d-live);
+      }
+      .stage.ok {
+        border-top-color: var(--d-ok);
+      }
+      .stage.ok .st {
+        color: var(--d-ok);
+      }
+      .stage.fail {
+        border-top-color: var(--d-bad);
+      }
+      .stage.fail .st {
+        color: var(--d-bad);
+      }
+      .plog {
+        margin-top: 12px;
+        background: #020617;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: 12px/1.7 var(--font-mono);
+        color: #94a3b8;
+        min-height: 150px;
+      }
+      .alert {
+        border: 1px solid rgba(248, 113, 113, 0.45);
+        background: rgba(220, 38, 38, 0.1);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .alert.warn {
+        border-color: rgba(245, 158, 11, 0.45);
+        background: rgba(245, 158, 11, 0.08);
+      }
+      .alert.resolved {
+        border-color: rgba(34, 197, 94, 0.4);
+        background: rgba(34, 197, 94, 0.08);
+      }
+      .alert h4 {
+        color: #fff;
+        margin: 4px 0 6px;
+        font-size: 15px;
+      }
+      .sev {
+        font: 600 11px var(--font-mono);
+        color: var(--d-bad);
+      }
+      .alert.warn .sev {
+        color: var(--d-warn);
+      }
+      .alert.resolved .sev {
+        color: var(--d-ok);
+      }
+      .kv {
+        font: 12px/1.8 var(--font-mono);
+        color: var(--d-muted);
+      }
+      .kv b {
+        color: var(--d-text);
+        font-weight: 600;
+      }
+      .empty-s {
+        color: var(--d-muted);
+        text-align: center;
+        padding: 40px 10px;
+        font-size: 13px;
+      }
+
+      /* modal in dark */
+      .modal-bg .modal {
+        background: var(--d-panel);
+        color: var(--d-text);
+        border: 1px solid var(--d-line);
+      }
+      .modal h3 {
+        color: #fff;
+      }
+      .modal .input {
+        background: #020617;
+        border-color: var(--d-line);
+        color: #fff;
+      }
+      .opt {
+        display: flex;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid var(--d-line);
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 8px;
+      }
+      .opt:has(input:checked) {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, 0.12);
+      }
+      .opt b {
+        color: #fff;
+      }
+      .opt div {
+        font-size: 12px;
+        color: var(--d-muted);
+      }
+      .guest {
+        background: rgba(34, 211, 238, 0.12);
+        color: var(--d-live);
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 999px;
+      }
+      #toasts .toast {
+        background: #1e293b;
+      }
+    </style>
+  </head>
+  <body class="ws">
+    <div class="ws-grid">
+      <header class="topbar">
+        <a class="logo" href="dashboard.html" title="Back to dashboard"
+          ><span class="logo-mark"
+            ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4">
+              <path d="M4 17l6-6-6-6" />
+              <path d="M12 19h8" /></svg></span
+        ></a>
+        <div class="title">The Rs 1,000 Discount Bug <small>ByteBite · BYTE-482</small></div>
+        <div class="steps" id="steps" aria-label="Progress">
+          <span data-s="0">Understand</span><span data-s="1">Change</span><span data-s="2">Test</span
+          ><span data-s="3">Ship</span><span data-s="4">Recover</span>
+        </div>
+        <span class="guest" id="guestTag" hidden>Guest demo</span>
+        <div class="spacer"></div>
+        <span class="timer" id="timer" aria-label="Elapsed time">00:00</span>
+        <button class="wbtn" id="hintBtn">💡 Hint <span style="color: var(--d-warn)">−5</span></button>
+        <button class="wbtn primary" id="deployBtn" disabled>⇪ Commit &amp; Deploy</button>
+        <button class="wbtn go" id="finishBtn" hidden>✓ Finish attempt</button>
+      </header>
+
+      <!-- Zone 1: Code -->
+      <aside class="pane">
+        <div class="pane-h"><span class="lbl">Explorer</span></div>
+        <div class="tree" id="tree">
+          <div class="d">▾ orders-service</div>
+          <div class="d" style="padding-left: 20px">▾ src</div>
+          <div class="f on" data-file="discount" style="padding-left: 34px">discount.js</div>
+          <div class="f" data-file="index" style="padding-left: 34px">index.js</div>
+          <div class="d" style="padding-left: 20px">▾ tests</div>
+          <div class="f" data-file="test" style="padding-left: 34px">discount.test.js</div>
+          <div class="d">▾ deploy</div>
+          <div class="f" data-file="env" style="padding-left: 20px">payments.env</div>
+          <div class="f" data-file="readme">README.md</div>
+        </div>
+        <div class="brief-mini">
+          <b>Ticket:</b> orders of exactly Rs 1,000 don't get the 10% discount. Fix, test, ship, then watch
+          production. <a href="brief.html" style="color: var(--d-live)">Full brief</a>
+        </div>
+      </aside>
+
+      <section class="pane" style="border-right: 0">
+        <div class="pane-h" id="fileTabs"></div>
+        <div class="editor">
+          <div class="gutter" id="gutter"></div>
+          <div class="code-wrap">
+            <pre id="hl" aria-hidden="true"></pre>
+            <textarea id="code" spellcheck="false" aria-label="Code editor"></textarea>
+          </div>
+        </div>
+        <div class="edit-bar">
+          <span id="fileInfo">JavaScript · UTF-8</span>
+          <div class="spacer"></div>
+          <button class="wbtn" id="runBtn">▶ Run tests</button>
+        </div>
+      </section>
+
+      <!-- Zone 3: System -->
+      <section class="pane sys">
+        <div class="pane-h" role="tablist">
+          <button class="tab on" data-tab="map">System Map</button>
+          <button class="tab" data-tab="pipe">Pipeline</button>
+          <button class="tab" data-tab="inc">
+            Incidents <span class="count" id="incCount" hidden>1</span>
+          </button>
+        </div>
+        <div class="sys-body">
+          <div data-panel="map">
+            <div class="row between" style="margin-bottom: 10px">
+              <span style="font-size: 12px; color: var(--d-muted)"
+                >production · <span id="release" class="mono">v1.4.1</span></span
+              >
+              <div class="view-toggle" role="group" aria-label="Map view">
+                <button class="on" data-view="3d">3D</button><button data-view="2d">2D</button>
+              </div>
+            </div>
+            <div class="map-box">
+              <svg id="map" viewBox="0 0 440 290" width="100%" role="img" aria-label="Live system map"></svg>
+            </div>
+            <div class="legend">
+              <span>✓ healthy</span><span style="color: var(--d-live)">⟳ deploying</span
+              ><span style="color: var(--d-warn)">▲ degraded</span
+              ><span style="color: var(--d-bad)">✕ down</span>
+            </div>
+            <div class="metrics">
+              <div class="metric" id="mErr">
+                <div class="l">Error rate (5xx)</div>
+                <div class="v" id="vErr">0.4%</div>
+                <svg id="sErr" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+              </div>
+              <div class="metric" id="mLat">
+                <div class="l">p95 latency</div>
+                <div class="v" id="vLat">180ms</div>
+                <svg id="sLat" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+              </div>
+              <div class="metric">
+                <div class="l">Requests / s</div>
+                <div class="v" id="vRps">212</div>
+                <svg id="sRps" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+              </div>
+            </div>
+          </div>
+          <div data-panel="pipe" hidden>
+            <div class="stages" id="stages">
+              <div class="stage" data-st="build">
+                <div class="nm">Build</div>
+                <div class="st">waiting</div>
+              </div>
+              <div class="stage" data-st="lint">
+                <div class="nm">Lint</div>
+                <div class="st">waiting</div>
+              </div>
+              <div class="stage" data-st="test">
+                <div class="nm">Test</div>
+                <div class="st">waiting</div>
+              </div>
+              <div class="stage" data-st="deploy">
+                <div class="nm">Deploy</div>
+                <div class="st">waiting</div>
+              </div>
+            </div>
+            <div class="plog" id="plog">
+              <span class="dim">No pipeline runs yet. Commit &amp; Deploy to start one.</span>
+            </div>
+          </div>
+          <div data-panel="inc" hidden>
+            <div id="incidents">
+              <div class="empty-s">✓ No active incidents.<br />Alerts will appear here after you deploy.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Zone 2: Terminal & Tests -->
+      <section class="pane term-pane">
+        <div class="pane-h">
+          <button class="tab on" data-ttab="term">Terminal</button
+          ><button class="tab" data-ttab="tests">Test results</button>
+          <div class="spacer"></div>
+          <span class="lbl">sandbox · node 20 · isolated</span>
+        </div>
+        <div class="term" id="term" aria-live="polite"></div>
+        <div class="term" id="tests" hidden><span class="dim">Run the tests to see results.</span></div>
+        <div class="term-in">
+          <span style="color: var(--d-live)">learner@sandbox:~/orders-service$</span
+          ><input
+            id="cmd"
+            placeholder="try: npm test · git diff · logs payments · rollback · help"
+            aria-label="Terminal command"
+          />
+        </div>
+      </section>
+    </div>
+
+    <!-- Deploy modal -->
+    <div class="modal-bg" id="deployModal" role="dialog" aria-modal="true" aria-labelledby="dmT">
+      <div class="modal">
+        <h3 id="dmT">Commit &amp; deploy to production</h3>
+        <label class="f" for="msg" style="color: var(--d-text)">Commit message</label>
+        <input class="input mono" id="msg" value="fix(discount): include orders of exactly Rs 1000" />
+        <div class="mt2" style="font-weight: 600; font-size: 14px">Deployment strategy</div>
+        <label class="opt"
+          ><input type="radio" name="strat" value="direct" checked /><span
+            ><b>Direct</b>
+            <div>Replace all instances at once. Fastest.</div></span
+          ></label
+        >
+        <label class="opt"
+          ><input type="radio" name="strat" value="canary" /><span
+            ><b>Canary (10%)</b>
+            <div>Send 10% of traffic to the new release first. Safer.</div></span
+          ></label
+        >
+        <div class="row mt3" style="justify-content: flex-end">
+          <button class="wbtn" onclick="closeModal('deployModal')">Cancel</button
+          ><button class="wbtn primary" id="confirmDeploy">Run pipeline</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hint modal -->
+    <div class="modal-bg" id="hintModal" role="dialog" aria-modal="true" aria-labelledby="hmT">
+      <div class="modal">
+        <h3 id="hmT">Hint <span id="hintN"></span></h3>
+        <p id="hintText" style="color: var(--d-text)"></p>
+        <p class="small" style="color: var(--d-warn)">
+          Each hint costs 5 rubric points. Hints used: <b id="hintUsed">0</b>
+        </p>
+        <div class="row" style="justify-content: flex-end">
+          <button class="wbtn primary" onclick="closeModal('hintModal')">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script src="assets/workspace.js"></script>
+  </body>
+</html>

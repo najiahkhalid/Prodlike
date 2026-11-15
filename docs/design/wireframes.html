@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prodlike Wireframes</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Low-fidelity wireframe kit: greyscale only, no brand colour, one annotation colour */
+      :root {
+        --ink: #374151;
+        --line: #6b7280;
+        --fill: #e5e7eb;
+        --fill2: #f3f4f6;
+        --ann: #2563eb;
+        --dark: #4b5563;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #d1d5db;
+        font:
+          14px/1.4 'Balsamiq Sans',
+          'Comic Sans MS',
+          sans-serif;
+        color: var(--ink);
+        padding: 30px;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: 1200px 330px;
+        gap: 0;
+        background: #fff;
+        margin: 0 auto 40px;
+        width: 1530px;
+        border: 2px solid var(--ink);
+      }
+      .frame {
+        border-right: 2px dashed #9ca3af;
+      }
+      .chrome {
+        height: 34px;
+        background: var(--fill2);
+        border-bottom: 2px solid var(--ink);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+      }
+      .chrome i {
+        width: 11px;
+        height: 11px;
+        border: 2px solid var(--line);
+        border-radius: 50%;
+      }
+      .chrome .url {
+        margin-left: 14px;
+        flex: 0 0 420px;
+        height: 20px;
+        border: 2px solid var(--line);
+        border-radius: 10px;
+        font-size: 11px;
+        padding: 0 10px;
+        line-height: 16px;
+        color: var(--line);
+      }
+      .legend {
+        padding: 26px 22px;
+        font-size: 13.5px;
+      }
+      .legend h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .legend .id {
+        color: var(--ann);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.05em;
+      }
+      .legend p.purpose {
+        margin: 8px 0 18px;
+        color: var(--line);
+      }
+      .legend ol {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        counter-reset: a;
+      }
+      .legend li {
+        counter-increment: a;
+        position: relative;
+        padding: 0 0 12px 32px;
+      }
+      .legend li::before {
+        content: counter(a);
+        position: absolute;
+        left: 0;
+        top: -1px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--ann);
+        color: #fff;
+        font:
+          700 12px/22px 'Balsamiq Sans',
+          sans-serif;
+        text-align: center;
+      }
+      .legend .nav-note {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 2px dashed #d1d5db;
+        font-size: 12.5px;
+        color: var(--line);
+      }
+      .legend .nav-note b {
+        color: var(--ink);
+      }
+
+      /* primitives */
+      .r {
+        position: relative;
+      }
+      .ann {
+        position: absolute;
+        top: -11px;
+        left: -11px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--ann);
+        color: #fff;
+        font:
+          700 12px/22px 'Balsamiq Sans',
+          sans-serif;
+        text-align: center;
+        z-index: 3;
+        box-shadow: 0 0 0 3px #fff;
+      }
+      .box {
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        background: #fff;
+        padding: 12px;
+      }
+      .box.fill {
+        background: var(--fill2);
+      }
+      .box.dark {
+        background: var(--dark);
+        border-color: var(--ink);
+        color: #fff;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .between {
+        justify-content: space-between;
+      }
+      .g {
+        display: grid;
+        gap: 14px;
+      }
+      .ln {
+        height: 9px;
+        background: var(--fill);
+        border-radius: 5px;
+        margin: 6px 0;
+      }
+      .dark .ln {
+        background: #6b7280;
+      }
+      .ln.s {
+        width: 40%;
+      }
+      .ln.m {
+        width: 65%;
+      }
+      .ln.l {
+        width: 90%;
+      }
+      .h {
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .h.xl {
+        font-size: 30px;
+        line-height: 1.15;
+      }
+      .h.lg {
+        font-size: 22px;
+      }
+      .t {
+        font-size: 12px;
+        color: var(--line);
+      }
+      .dark .t {
+        color: #d1d5db;
+      }
+      .btn {
+        display: inline-block;
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-weight: 700;
+        font-size: 13px;
+        background: #fff;
+        white-space: nowrap;
+      }
+      .btn.p {
+        background: var(--ink);
+        color: #fff;
+      }
+      .chip {
+        display: inline-block;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        padding: 1px 10px;
+        font-size: 11.5px;
+      }
+      .chip.on {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+      .img {
+        border: 2px solid var(--ink);
+        background: var(--fill2);
+        position: relative;
+        border-radius: 6px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        color: var(--line);
+        font-size: 12px;
+      }
+      .img::before,
+      .img::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 140%;
+        border-top: 2px solid #d1d5db;
+        transform-origin: center;
+      }
+      .img::before {
+        transform: translateX(-14%) rotate(var(--a, 22deg));
+      }
+      .img::after {
+        transform: translateX(-14%) rotate(calc(-1 * var(--a, 22deg)));
+      }
+      .img > .ann {
+        top: 8px;
+        left: 8px;
+      }
+      .dark .btn {
+        color: var(--ink);
+      }
+      .img span {
+        position: relative;
+        z-index: 1;
+        background: var(--fill2);
+        padding: 2px 8px;
+      }
+      .input {
+        border: 2px solid var(--line);
+        border-radius: 6px;
+        height: 32px;
+        padding: 0 10px;
+        font-size: 12px;
+        color: var(--line);
+        display: flex;
+        align-items: center;
+      }
+      .av {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid var(--ink);
+        background: var(--fill);
+        flex: none;
+      }
+      .bar {
+        height: 10px;
+        border: 2px solid var(--line);
+        border-radius: 6px;
+        position: relative;
+        overflow: hidden;
+      }
+      .bar i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        background: #9ca3af;
+      }
+      .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      .tbl td,
+      .tbl th {
+        border-bottom: 2px solid var(--fill);
+        padding: 7px 6px;
+        text-align: left;
+      }
+      .tbl th {
+        color: var(--line);
+      }
+      .side {
+        background: var(--fill2);
+        border-right: 2px solid var(--ink);
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .side .it {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+        padding: 5px 6px;
+        border-radius: 5px;
+      }
+      .side .it::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--line);
+        border-radius: 3px;
+      }
+      .side .it.on {
+        background: var(--fill);
+        font-weight: 700;
+      }
+      .note {
+        font-size: 11.5px;
+        color: var(--ann);
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ================================================================== WF-01 HOME -->
+    <section class="board" id="wf1">
+      <div class="frame">
+        <div class="chrome">
+          <i></i><i></i><i></i>
+          <div class="url">prodlike.app/</div>
+        </div>
+        <div class="row between r" style="padding: 12px 30px; border-bottom: 2px solid var(--ink)">
+          <span class="ann" style="top: 6px; left: 4px">1</span>
+          <div class="row">
+            <div class="img" style="width: 26px; height: 26px; --a: 45deg"></div>
+            <b>Prodlike</b>
+          </div>
+          <div class="row" style="gap: 22px">
+            <span>How It Works</span><span>Scenarios</span><span>For Instructors</span>
+          </div>
+          <div class="row"><span class="btn">Log in</span><span class="btn p">Sign up free</span></div>
+        </div>
+        <div
+          class="g r"
+          style="grid-template-columns: 1fr 1fr; padding: 40px 30px; gap: 36px; align-items: center"
+        >
+          <span class="ann" style="top: 6px; left: 4px">2</span>
+          <div class="col">
+            <span class="chip" style="align-self: flex-start">tagline badge</span>
+            <div class="h xl">Your first production incident shouldn't be a real one.</div>
+            <div class="ln l"></div>
+            <div class="ln l"></div>
+            <div class="ln m"></div>
+            <div class="row r" style="margin-top: 10px">
+              <span class="ann">3</span><span class="btn p">▶ Try a 5-min demo (no sign-up)</span
+              ><span class="btn">How it works</span>
+            </div>
+            <div class="t">social proof line</div>
+          </div>
+          <div class="img r" style="height: 250px; --a: 16deg">
+            <span class="ann">4</span><span>live system-map preview + alert strip</span>
+          </div>
+        </div>
+        <div
+          class="r"
+          style="
+            padding: 24px 30px;
+            background: var(--fill2);
+            border-top: 2px solid var(--ink);
+            border-bottom: 2px solid var(--ink);
+          "
+        >
+          <span class="ann" style="top: 6px; left: 4px">5</span>
+          <div class="h lg">One scenario. The whole lifecycle.</div>
+          <div class="g" style="grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 12px">
+            <div class="box">
+              01 <b>Understand</b>
+              <div class="ln l"></div>
+              <div class="ln m"></div>
+            </div>
+            <div class="box">
+              02 <b>Change</b>
+              <div class="ln l"></div>
+              <div class="ln m"></div>
+            </div>
+            <div class="box">
+              03 <b>Test</b>
+              <div class="ln l"></div>
+              <div class="ln m"></div>
+            </div>
+            <div class="box">
+              04 <b>Ship</b>
+              <div class="ln l"></div>
+              <div class="ln m"></div>
+            </div>
+            <div class="box">
+              05 <b>Recover</b>
+              <div class="ln l"></div>
+              <div class="ln m"></div>
+            </div>
+          </div>
+        </div>
+        <div class="r" style="padding: 24px 30px">
+          <span class="ann" style="top: 6px; left: 4px">6</span>
+          <div class="row between">
+            <div class="h lg">Scenario library</div>
+            <span class="btn">Browse all →</span>
+          </div>
+          <div class="g" style="grid-template-columns: repeat(4, 1fr); margin-top: 12px">
+            <div class="box">
+              <span class="chip">difficulty</span>
+              <div class="h" style="margin-top: 8px">Scenario title</div>
+              <div class="t">Fictional company</div>
+              <div class="row" style="gap: 4px; margin: 6px 0">
+                <span class="chip">skill</span><span class="chip">skill</span>
+              </div>
+              <div class="t">⏱ time</div>
+            </div>
+            <div class="box">
+              <span class="chip">difficulty</span>
+              <div class="h" style="margin-top: 8px">Scenario title</div>
+              <div class="t">Fictional company</div>
+              <div class="row" style="gap: 4px; margin: 6px 0">
+                <span class="chip">skill</span><span class="chip">skill</span>
+              </div>
+              <div class="t">⏱ time</div>
+            </div>
+            <div class="box">
+              <span class="chip">difficulty</span>
+              <div class="h" style="margin-top: 8px">Scenario title</div>
+              <div class="t">Fictional company</div>
+              <div class="row" style="gap: 4px; margin: 6px 0">
+                <span class="chip">skill</span><span class="chip">skill</span>
+              </div>
+              <div class="t">⏱ time</div>
+            </div>
+            <div class="box">
+              <span class="chip">difficulty</span>
+              <div class="h" style="margin-top: 8px">Scenario title</div>
+              <div class="t">Fictional company</div>
+              <div class="row" style="gap: 4px; margin: 6px 0">
+                <span class="chip">skill</span><span class="chip">skill</span>
+              </div>
+              <div class="t">⏱ time</div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="g r"
+          style="
+            grid-template-columns: 1fr 1fr;
+            padding: 20px 30px;
+            gap: 36px;
+            border-top: 2px solid var(--fill);
+          "
+        >
+          <span class="ann" style="top: 6px; left: 4px">7</span>
+          <div>
+            <div class="h lg">For instructors</div>
+            <div class="ln l"></div>
+            <div class="ln m"></div>
+            <div class="ln l"></div>
+            <div class="ln m"></div>
+            <span class="btn p" style="margin-top: 8px">Set up a cohort</span>
+          </div>
+          <div class="box">
+            <div class="row between"><b>Cohort preview</b><span class="chip">32 learners</span></div>
+            <div class="t" style="margin-top: 8px">Average score</div>
+            <div class="bar"><i style="width: 74%"></i></div>
+            <div class="t">Completion</div>
+            <div class="bar"><i style="width: 88%"></i></div>
+            <div class="t">Median time to recover</div>
+            <div class="bar"><i style="width: 40%"></i></div>
+          </div>
+        </div>
+        <div class="box dark r row between" style="margin: 10px 30px 20px; padding: 20px">
+          <span class="ann">8</span>
+          <div>
+            <div class="h lg">Break things. Safely.</div>
+            <div class="t">supporting line</div>
+          </div>
+          <div class="row">
+            <span class="btn">Create free account</span><span class="btn">Try the demo</span>
+          </div>
+        </div>
+        <div
+          class="g r"
+          style="
+            grid-template-columns: repeat(4, 1fr);
+            background: var(--dark);
+            color: #fff;
+            padding: 18px 30px;
+          "
+        >
+          <span class="ann" style="top: 6px; left: 4px">9</span>
+          <div>
+            <b>Prodlike</b>
+            <div class="t" style="color: #d1d5db">course / project line</div>
+          </div>
+          <div>
+            <b>Product</b>
+            <div class="t" style="color: #d1d5db">How it works · Library · Instructors</div>
+          </div>
+          <div>
+            <b>Account</b>
+            <div class="t" style="color: #d1d5db">Sign up · Log in · Reset password</div>
+          </div>
+          <div>
+            <b>Team</b>
+            <div class="t" style="color: #d1d5db">3 members</div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="id">WF-01 · PUBLIC</div>
+        <h2>Home / Landing</h2>
+        <p class="purpose">
+          Explain the idea in 5 seconds and get a visitor into a scenario with as few clicks as possible.
+        </p>
+        <ol>
+          <li><b>Sticky top nav</b>: logo (home), anchor links, Log in, primary Sign up.</li>
+          <li><b>Hero</b>: problem-led headline + 2–3 line value proposition.</li>
+          <li>
+            <b>Primary CTA = guest demo</b> (refinement: no sign-up needed). Secondary CTA scrolls to How It
+            Works.
+          </li>
+          <li>
+            <b>Product visual</b>: preview of the live system map during an incident, showing the "wow"
+            feature.
+          </li>
+          <li><b>How it works</b>: the 5-step lifecycle as a horizontal strip.</li>
+          <li><b>Scenario library preview</b>: 4 cards (difficulty, title, company, skills, time).</li>
+          <li><b>Instructor section</b>: benefits list + cohort stats preview.</li>
+          <li><b>Closing CTA band</b> (dark) repeats both actions.</li>
+          <li><b>Footer</b>: product, account and team links.</li>
+        </ol>
+        <div class="nav-note">
+          <b>Navigation:</b> Demo → Scenario Brief (guest) · Sign up/Log in → Auth page → Learner or
+          Instructor dashboard · Card → Brief.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== WF-02 CATALOGUE -->
+    <section class="board" id="wf2">
+      <div class="frame">
+        <div class="chrome">
+          <i></i><i></i><i></i>
+          <div class="url">prodlike.app/scenarios</div>
+        </div>
+        <div class="g" style="grid-template-columns: 200px 1fr; min-height: 640px">
+          <div class="side r">
+            <span class="ann" style="top: 8px; left: 8px">1</span>
+            <div class="row" style="margin: 4px 0 12px">
+              <div class="img" style="width: 24px; height: 24px; --a: 45deg"></div>
+              <b>Prodlike</b>
+            </div>
+            <div class="t">LEARNER</div>
+            <div class="it">Dashboard</div>
+            <div class="it on">Scenarios</div>
+            <div class="it">Progress History</div>
+            <div class="it">Profile &amp; Settings</div>
+            <div style="flex: 1"></div>
+            <div class="row">
+              <div class="av"></div>
+              <div class="t">name · cohort</div>
+            </div>
+          </div>
+          <div style="padding: 22px 26px">
+            <div class="row between r">
+              <span class="ann">2</span>
+              <div>
+                <div class="t">Dashboard / Scenarios</div>
+                <div class="h lg">Scenario Catalogue</div>
+              </div>
+              <div class="input r" style="width: 260px">🔍 Search scenarios…</div>
+            </div>
+            <div class="row r" style="margin: 18px 0; gap: 22px; flex-wrap: wrap">
+              <span class="ann">3</span>
+              <div class="row" style="gap: 6px">
+                <b class="t">Difficulty</b><span class="chip on">All</span><span class="chip">Beginner</span
+                ><span class="chip">Intermediate</span><span class="chip">Advanced</span>
+              </div>
+              <div class="row" style="gap: 6px">
+                <b class="t">Skill</b><span class="chip on">All</span><span class="chip">Bug fix</span
+                ><span class="chip">Feature</span><span class="chip">Rollback</span
+                ><span class="chip">Config</span>
+              </div>
+            </div>
+            <div class="g r" style="grid-template-columns: repeat(3, 1fr)">
+              <span class="ann">4</span>
+              <div class="box">
+                <div class="row between"><span class="chip">Beginner</span></div>
+                <div class="h" style="margin-top: 10px">Scenario title</div>
+                <div class="t">Company</div>
+                <div class="row" style="gap: 4px; margin: 8px 0">
+                  <span class="chip">skill</span><span class="chip">skill</span>
+                </div>
+                <div class="row between t" style="border-top: 2px solid var(--fill); padding-top: 8px">
+                  <span>⏱ time</span
+                  ><span class="r">Best: 86%<span class="ann" style="left: auto; right: -14px">5</span></span>
+                </div>
+              </div>
+              <div class="box">
+                <div class="row between"><span class="chip">Intermediate</span></div>
+                <div class="h" style="margin-top: 10px">Scenario title</div>
+                <div class="t">Company</div>
+                <div class="row" style="gap: 4px; margin: 8px 0"><span class="chip">skill</span></div>
+                <div class="row between t" style="border-top: 2px solid var(--fill); padding-top: 8px">
+                  <span>⏱ time</span><span>Best: 64%</span>
+                </div>
+              </div>
+              <div class="box">
+                <div class="row between">
+                  <span class="chip">Intermediate</span
+                  ><span class="chip r"
+                    >⏱ Due in 2 days<span class="ann" style="left: auto; right: -14px">6</span></span
+                  >
+                </div>
+                <div class="h" style="margin-top: 10px">Scenario title</div>
+                <div class="t">Company</div>
+                <div class="row" style="gap: 4px; margin: 8px 0"><span class="chip">skill</span></div>
+                <div class="row between t" style="border-top: 2px solid var(--fill); padding-top: 8px">
+                  <span>⏱ time</span><span>Not attempted</span>
+                </div>
+              </div>
+              <div class="box">
+                <span class="chip">Advanced</span>
+                <div class="h" style="margin-top: 10px">Scenario title</div>
+                <div class="t">Company</div>
+                <div class="row" style="gap: 4px; margin: 8px 0">
+                  <span class="chip">skill</span><span class="chip">skill</span>
+                </div>
+                <div class="row between t" style="border-top: 2px solid var(--fill); padding-top: 8px">
+                  <span>⏱ time</span><span>Not attempted</span>
+                </div>
+              </div>
+              <div class="box">
+                <div class="row between">
+                  <span class="chip">Advanced</span><span class="chip">Coming soon</span>
+                </div>
+                <div class="h" style="margin-top: 10px">Scenario title</div>
+                <div class="t">Company</div>
+                <div class="row" style="gap: 4px; margin: 8px 0"><span class="chip">skill</span></div>
+                <div class="row between t" style="border-top: 2px solid var(--fill); padding-top: 8px">
+                  <span>⏱ time</span><span>—</span>
+                </div>
+              </div>
+              <div class="box">
+                <span class="chip">Beginner</span>
+                <div class="h" style="margin-top: 10px">Scenario title</div>
+                <div class="t">Company</div>
+                <div class="row" style="gap: 4px; margin: 8px 0"><span class="chip">skill</span></div>
+                <div class="row between t" style="border-top: 2px solid var(--fill); padding-top: 8px">
+                  <span>⏱ time</span><span>Not attempted</span>
+                </div>
+              </div>
+            </div>
+            <div class="box fill r" style="margin-top: 18px; text-align: center; border-style: dashed">
+              <span class="ann">7</span
+              ><span class="t">Empty state: “No scenarios match these filters. Clear filters”</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="id">WF-02 · LEARNER</div>
+        <h2>Scenario Catalogue</h2>
+        <p class="purpose">Help a learner pick the right next scenario quickly (FR-03).</p>
+        <ol>
+          <li>
+            <b>App sidebar</b> (all logged-in pages): role-based links, current page highlighted, user at
+            bottom.
+          </li>
+          <li><b>Page header</b>: breadcrumb, title, keyword search.</li>
+          <li><b>Filter chips</b> for difficulty and skill; selected chip is filled, never colour alone.</li>
+          <li><b>Card grid</b> (3 columns → 2 → 1 on smaller screens). Whole card is clickable.</li>
+          <li><b>Personal best</b> shown on attempted scenarios.</li>
+          <li><b>Assignment deadline</b> flag from an instructor.</li>
+          <li><b>Empty state</b> with a recovery action (NFR-09).</li>
+        </ol>
+        <div class="nav-note">
+          <b>Navigation:</b> Card → Scenario Brief · Sidebar → Dashboard / Progress / Profile.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== WF-03 BRIEF -->
+    <section class="board" id="wf3">
+      <div class="frame">
+        <div class="chrome">
+          <i></i><i></i><i></i>
+          <div class="url">prodlike.app/scenarios/discount-bug</div>
+        </div>
+        <div class="g" style="grid-template-columns: 200px 1fr; min-height: 640px">
+          <div class="side">
+            <div class="row" style="margin: 4px 0 12px">
+              <div class="img" style="width: 24px; height: 24px; --a: 45deg"></div>
+              <b>Prodlike</b>
+            </div>
+            <div class="t">LEARNER</div>
+            <div class="it">Dashboard</div>
+            <div class="it on">Scenarios</div>
+            <div class="it">Progress History</div>
+            <div class="it">Profile &amp; Settings</div>
+          </div>
+          <div style="padding: 22px 26px">
+            <div class="box fill r t" style="margin-bottom: 14px; border-style: dashed">
+              <span class="ann">1</span>Guest banner (demo only): “You're trying a demo. Create an account to
+              save your result.”
+            </div>
+            <div class="r">
+              <span class="ann">2</span>
+              <div class="t">Scenarios / Brief</div>
+              <div class="h lg">Scenario title</div>
+              <div class="row" style="gap: 6px; margin-top: 6px">
+                <span class="chip">Beginner</span><span class="chip">Bug fix</span
+                ><span class="chip">Testing</span><span class="t">⏱ 5–10 min</span>
+              </div>
+            </div>
+            <div class="g" style="grid-template-columns: 1.6fr 1fr; margin-top: 16px; align-items: start">
+              <div class="col" style="gap: 14px">
+                <div class="box r" style="border-left-width: 6px">
+                  <span class="ann">3</span>
+                  <div class="row">
+                    <span class="chip">P2 · Bug</span><span class="t">TICKET-ID · reported by Support</span>
+                  </div>
+                  <div class="h" style="margin-top: 8px">Ticket headline</div>
+                  <div class="ln l"></div>
+                  <div class="ln l"></div>
+                  <div class="ln m"></div>
+                </div>
+                <div class="box r">
+                  <span class="ann">4</span><b>Company context</b>
+                  <div class="ln l"></div>
+                  <div class="ln m"></div>
+                  <div class="box fill row" style="margin-top: 8px">
+                    <div class="av"></div>
+                    <div style="flex: 1">
+                      <b class="t">Teammate message</b>
+                      <div class="ln l"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="box r">
+                  <span class="ann">5</span><b>Your objectives</b>
+                  <div class="t">
+                    1. ________________ &nbsp; 2. ________________<br />3. ________________ &nbsp; 4.
+                    ________________
+                  </div>
+                  <b style="display: block; margin-top: 8px">Constraints</b>
+                  <div class="ln l"></div>
+                </div>
+              </div>
+              <div class="col" style="gap: 14px">
+                <div class="box r">
+                  <span class="ann">6</span><b>How you'll be scored</b>
+                  <div class="row between t" style="border-bottom: 2px dashed var(--fill); padding: 6px 0">
+                    <span>Correctness</span><b>30</b>
+                  </div>
+                  <div class="row between t" style="border-bottom: 2px dashed var(--fill); padding: 6px 0">
+                    <span>Testing</span><b>25</b>
+                  </div>
+                  <div class="row between t" style="border-bottom: 2px dashed var(--fill); padding: 6px 0">
+                    <span>Deployment safety</span><b>20</b>
+                  </div>
+                  <div class="row between t" style="padding: 6px 0"><span>Recovery</span><b>25</b></div>
+                  <div class="t">Hints: −5 each</div>
+                  <div class="r" style="margin-top: 10px">
+                    <span class="ann">7</span
+                    ><span class="btn p" style="display: block; text-align: center">▶ Start attempt</span>
+                  </div>
+                  <div class="t" style="text-align: center; margin-top: 4px">sandbox starts in ~10 s</div>
+                </div>
+                <div class="box fill r">
+                  <span class="ann">8</span><b>Your attempts</b>
+                  <div class="t">Attempt 1 · 72% · debrief link</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="id">WF-03 · LEARNER / GUEST</div>
+        <h2>Scenario Brief</h2>
+        <p class="purpose">Set the scene and make expectations explicit before the timer starts (FR-04).</p>
+        <ol>
+          <li><b>Guest banner</b>, shown only in demo mode (refinement 1).</li>
+          <li><b>Title + meta</b>: difficulty, skills, estimated time.</li>
+          <li><b>Ticket card</b> written like a real issue tracker ticket.</li>
+          <li><b>Story context</b>: fictional company + teammate message (foreshadows the incident).</li>
+          <li><b>Objectives &amp; constraints</b>, including permitted terminal commands.</li>
+          <li>
+            <b>Transparent rubric</b>: learners know how they are scored; hint penalty stated (refinement 3).
+          </li>
+          <li><b>Primary action</b>: Start attempt. Sticky in the right column.</li>
+          <li><b>Attempt history</b> (hidden for guests).</li>
+        </ol>
+        <div class="nav-note">
+          <b>Navigation:</b> Start attempt → Scenario Workspace · Breadcrumb → Catalogue.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== WF-04 WORKSPACE -->
+    <section class="board" id="wf4">
+      <div class="frame">
+        <div class="chrome">
+          <i></i><i></i><i></i>
+          <div class="url">prodlike.app/attempts/7f3a/workspace</div>
+        </div>
+        <div style="background: #f9fafb">
+          <div
+            class="row between r"
+            style="padding: 10px 14px; border-bottom: 2px solid var(--ink); background: var(--fill)"
+          >
+            <span class="ann" style="top: 6px; left: 4px">1</span>
+            <div class="row" style="margin-left: 14px">
+              <div class="img" style="width: 24px; height: 24px; --a: 45deg"></div>
+              <b>Scenario title</b><span class="t">Company · TICKET-ID</span>
+            </div>
+            <div class="row r" style="gap: 4px">
+              <span class="ann">2</span><span class="chip on">Understand</span
+              ><span class="chip on">Change</span><span class="chip on">Test</span
+              ><span class="chip">Ship</span><span class="chip">Recover</span>
+            </div>
+            <div class="row r">
+              <span class="ann">3</span><span class="btn">⏱ 04:12</span><span class="btn">💡 Hint −5</span
+              ><span class="btn p">Commit &amp; Deploy</span>
+            </div>
+          </div>
+          <div class="g" style="grid-template-columns: 170px 1fr 380px; gap: 0; height: 600px">
+            <div
+              class="r"
+              style="border-right: 2px solid var(--ink); padding: 12px; display: flex; flex-direction: column"
+            >
+              <span class="ann" style="top: 6px; left: 6px">4</span>
+              <b class="t" style="margin-left: 22px">EXPLORER</b>
+              <div class="t" style="line-height: 2">
+                ▾ orders-service<br />&nbsp;&nbsp;▾ src<br />&nbsp;&nbsp;&nbsp;&nbsp;<b>discount.js</b>
+                M<br />&nbsp;&nbsp;&nbsp;&nbsp;index.js<br />&nbsp;&nbsp;▾ tests<br />&nbsp;&nbsp;&nbsp;&nbsp;discount.test.js<br />▾
+                deploy<br />&nbsp;&nbsp;payments.env<br />README.md
+              </div>
+              <div style="flex: 1"></div>
+              <div class="box fill t">Mini ticket summary + “Full brief” link</div>
+            </div>
+            <div style="display: grid; grid-template-rows: 1fr 210px; border-right: 2px solid var(--ink)">
+              <div class="r" style="padding: 0; display: flex; flex-direction: column">
+                <span class="ann" style="top: 6px; left: 6px">5</span>
+                <div class="row" style="border-bottom: 2px solid var(--ink); padding: 6px 12px 6px 26px">
+                  <span class="chip on">discount.js</span
+                  ><span class="t" style="margin-left: auto">src/discount.js</span>
+                </div>
+                <div style="padding: 10px 14px; flex: 1">
+                  <div class="t">1<br />2<br />3</div>
+                  <div class="ln m"></div>
+                  <div class="ln l"></div>
+                  <div class="ln s" style="margin-left: 30px"></div>
+                  <div class="ln m" style="margin-left: 30px; background: #c7cbd1"></div>
+                  <div class="ln s" style="margin-left: 30px"></div>
+                  <div class="ln s"></div>
+                  <div class="ln m"></div>
+                </div>
+                <div class="row between" style="border-top: 2px solid var(--ink); padding: 6px 12px">
+                  <span class="t">language · autosaved</span
+                  ><span class="btn r"
+                    >▶ Run tests<span class="ann" style="left: auto; right: -14px">6</span></span
+                  >
+                </div>
+              </div>
+              <div
+                class="r"
+                style="
+                  border-top: 2px solid var(--ink);
+                  background: var(--dark);
+                  color: #fff;
+                  display: flex;
+                  flex-direction: column;
+                "
+              >
+                <span class="ann" style="top: 6px; left: 6px">7</span>
+                <div class="row" style="padding: 6px 12px 6px 26px; border-bottom: 2px solid #6b7280">
+                  <span class="chip on" style="background: #fff; color: var(--ink)">Terminal</span
+                  ><span class="chip" style="color: #fff; border-color: #9ca3af">Test results</span
+                  ><span class="t" style="margin-left: auto">sandbox · isolated</span>
+                </div>
+                <div style="padding: 8px 14px; flex: 1; font-size: 12px; line-height: 1.7">
+                  $ npm test → 15 passed<br />$ logs payments<br />ERROR charge failed … <br />…
+                </div>
+                <div style="padding: 6px 14px; border-top: 2px solid #6b7280; font-size: 12px">
+                  learner@sandbox:~$ ▌
+                </div>
+              </div>
+            </div>
+            <div class="r" style="padding: 0; display: flex; flex-direction: column">
+              <span class="ann" style="top: 6px; left: 6px">8</span>
+              <div class="row" style="border-bottom: 2px solid var(--ink); padding: 6px 12px 6px 26px">
+                <span class="chip on">System Map</span><span class="chip">Pipeline</span
+                ><span class="chip">Incidents ①</span>
+              </div>
+              <div style="padding: 12px">
+                <div class="row between">
+                  <span class="t">production · v1.4.2</span
+                  ><span class="row r" style="gap: 0"
+                    ><span class="ann">9</span><span class="chip on">3D</span
+                    ><span class="chip">2D</span></span
+                  >
+                </div>
+                <div class="img" style="height: 220px; margin-top: 8px; --a: 30deg">
+                  <span
+                    >3D architecture map: nodes change state<br />(✓ healthy · ⟳ deploying · ▲ degraded · ✕
+                    down)</span
+                  >
+                </div>
+                <div class="g r" style="grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px">
+                  <span class="ann">10</span>
+                  <div class="box" style="padding: 8px">
+                    <div class="t">Error rate</div>
+                    <b>38%</b>
+                    <div class="ln"></div>
+                  </div>
+                  <div class="box" style="padding: 8px">
+                    <div class="t">p95 latency</div>
+                    <b>996ms</b>
+                    <div class="ln"></div>
+                  </div>
+                  <div class="box" style="padding: 8px">
+                    <div class="t">Req / s</div>
+                    <b>201</b>
+                    <div class="ln"></div>
+                  </div>
+                </div>
+                <div class="box fill r" style="margin-top: 12px; border-style: dashed">
+                  <span class="ann">11</span><b class="t">Incidents tab content:</b>
+                  <div class="t">
+                    SEV · service · release · error rate · impact<br />[View logs] [Roll back] [Open config]
+                    [Deploy hotfix]
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="id">WF-04 · LEARNER · CORE PAGE</div>
+        <h2>Scenario Workspace</h2>
+        <p class="purpose">
+          An IDE + ops console in one screen. Simplified from 5 separate panels into 3 zones (refinement 4).
+        </p>
+        <ol>
+          <li><b>Top bar</b>: scenario identity; logo returns to dashboard (progress autosaved).</li>
+          <li><b>Lifecycle stepper</b>: shows where the learner is.</li>
+          <li>
+            <b>Timer, Hint (−5) and the main action</b>: Commit &amp; Deploy (enabled only when tests pass).
+          </li>
+          <li><b>Zone 1a, file explorer</b>: modified files marked “M”.</li>
+          <li><b>Zone 1b, code editor</b> with file tabs and line numbers.</li>
+          <li><b>Run tests</b> next to the code it affects.</li>
+          <li><b>Zone 2, Terminal / Test results</b> (tabbed), restricted commands.</li>
+          <li><b>Zone 3, System</b> (tabbed): Map, Pipeline, Incidents with an alert count.</li>
+          <li><b>3D / 2D toggle</b> (refinement 2).</li>
+          <li><b>Live metrics</b> with sparklines.</li>
+          <li><b>Incident actions</b>: investigate, then recover.</li>
+        </ol>
+        <div class="nav-note">
+          <b>Navigation:</b> Deploy → modal (commit msg, strategy) → Pipeline tab → incident → Rollback/Hotfix
+          → <b>Finish attempt</b> → Debrief.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== WF-05 DEBRIEF -->
+    <section class="board" id="wf5">
+      <div class="frame">
+        <div class="chrome">
+          <i></i><i></i><i></i>
+          <div class="url">prodlike.app/attempts/7f3a/debrief</div>
+        </div>
+        <div class="g" style="grid-template-columns: 200px 1fr; min-height: 640px">
+          <div class="side">
+            <div class="row" style="margin: 4px 0 12px">
+              <div class="img" style="width: 24px; height: 24px; --a: 45deg"></div>
+              <b>Prodlike</b>
+            </div>
+            <div class="t">LEARNER</div>
+            <div class="it">Dashboard</div>
+            <div class="it on">Scenarios</div>
+            <div class="it">Progress History</div>
+            <div class="it">Profile &amp; Settings</div>
+          </div>
+          <div style="padding: 22px 26px">
+            <div class="row between r">
+              <span class="ann">1</span>
+              <div>
+                <div class="t">Dashboard / Debrief</div>
+                <div class="h lg">Debrief: Scenario title</div>
+              </div>
+              <div class="row">
+                <span class="btn">⟲ Retry</span><span class="btn p">Next scenario →</span>
+              </div>
+            </div>
+            <div class="box r row" style="margin-top: 14px; gap: 28px">
+              <span class="ann">2</span>
+              <div
+                style="
+                  width: 140px;
+                  height: 140px;
+                  border-radius: 50%;
+                  border: 14px solid #9ca3af;
+                  border-right-color: var(--fill);
+                  display: grid;
+                  place-items: center;
+                "
+              >
+                <div style="text-align: center">
+                  <b style="font-size: 30px">89</b>
+                  <div class="t">/ 100</div>
+                </div>
+              </div>
+              <div style="flex: 1">
+                <div class="row r" style="gap: 6px">
+                  <span class="ann">3</span><span class="chip">🏅 badge</span
+                  ><span class="chip">🧪 badge</span>
+                </div>
+                <div class="h lg" style="margin-top: 8px">Verdict headline</div>
+                <div class="ln l"></div>
+                <div class="ln m"></div>
+                <div class="t">⏱ total time · 🔥 time to recover · 💡 hints used</div>
+              </div>
+            </div>
+            <div class="g" style="grid-template-columns: 1.2fr 1fr; margin-top: 14px; align-items: start">
+              <div class="box r">
+                <span class="ann">4</span><b>Rubric breakdown</b>
+                <div
+                  class="g"
+                  style="
+                    grid-template-columns: 130px 1fr 40px;
+                    gap: 8px;
+                    align-items: center;
+                    margin-top: 8px;
+                    font-size: 12px;
+                  "
+                >
+                  <span>Correctness</span>
+                  <div class="bar"><i style="width: 100%"></i></div>
+                  <b>30</b><span>Testing</span>
+                  <div class="bar"><i style="width: 100%"></i></div>
+                  <b>25</b><span>Deploy safety</span>
+                  <div class="bar"><i style="width: 70%"></i></div>
+                  <b>14</b><span>Recovery</span>
+                  <div class="bar"><i style="width: 100%"></i></div>
+                  <b>25</b><span>Hints</span><span></span><b>−5</b>
+                </div>
+                <div class="t">each row has a one-line reason</div>
+              </div>
+              <div class="box r">
+                <span class="ann">5</span><b>Attempt timeline</b>
+                <div
+                  class="t"
+                  style="
+                    border-left: 2px solid var(--line);
+                    margin: 8px 0 0 6px;
+                    padding-left: 12px;
+                    line-height: 2;
+                  "
+                >
+                  ● 00:00 opened ticket<br />● 01:35 changed &gt; to &gt;=<br />● 02:50 added boundary test<br />●
+                  03:40 deployed (direct)<br />● 04:15 ALERT payments 5xx<br />● 06:19 recovered by rollback
+                </div>
+              </div>
+            </div>
+            <div class="box fill r" style="margin-top: 14px; border-left-width: 6px">
+              <span class="ann">6</span><b>💬 What a senior engineer would do differently</b>
+              <div class="ln l"></div>
+              <div class="ln l"></div>
+              <div class="ln m"></div>
+            </div>
+            <div class="r" style="margin-top: 14px">
+              <span class="ann">7</span><b>Recommended next</b>
+              <div class="g" style="grid-template-columns: repeat(3, 1fr); margin-top: 8px">
+                <div class="box">
+                  <span class="chip">level</span>
+                  <div class="ln m"></div>
+                  <div class="ln l"></div>
+                </div>
+                <div class="box">
+                  <span class="chip">level</span>
+                  <div class="ln m"></div>
+                  <div class="ln l"></div>
+                </div>
+                <div class="box">
+                  <span class="chip">level</span>
+                  <div class="ln m"></div>
+                  <div class="ln l"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="id">WF-05 · LEARNER</div>
+        <h2>Debrief &amp; Score Report</h2>
+        <p class="purpose">
+          Turn the attempt into learning: what you scored, why, and what to do next (FR-15).
+        </p>
+        <ol>
+          <li><b>Header actions</b>: Retry (improve score) and Next scenario.</li>
+          <li><b>Score ring</b> out of 100 + verdict and summary sentence.</li>
+          <li><b>Badges</b> earned (motivation / progression).</li>
+          <li><b>Rubric bars</b> with the reason for each score.</li>
+          <li><b>Timeline</b> of key decisions, marked good / risky / bad (FR-13).</li>
+          <li><b>Senior-engineer notes</b>: the main teaching moment.</li>
+          <li><b>Recommendations</b> targeting the weakest skill.</li>
+        </ol>
+        <div class="nav-note">
+          <b>Navigation:</b> Retry → Brief · Next → Catalogue/Brief · Guests see a “save this result: sign up”
+          card.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================== WF-06 INSTRUCTOR -->
+    <section class="board" id="wf6">
+      <div class="frame">
+        <div class="chrome">
+          <i></i><i></i><i></i>
+          <div class="url">prodlike.app/instructor</div>
+        </div>
+        <div class="g" style="grid-template-columns: 200px 1fr; min-height: 640px">
+          <div class="side r">
+            <span class="ann" style="top: 8px; left: 8px">1</span>
+            <div class="row" style="margin: 4px 0 12px">
+              <div class="img" style="width: 24px; height: 24px; --a: 45deg"></div>
+              <b>Prodlike</b>
+            </div>
+            <div class="t">INSTRUCTOR</div>
+            <div class="it on">Instructor Dashboard</div>
+            <div class="it">Cohorts</div>
+            <div class="it">Scenario Builder</div>
+            <div class="it">Learner Reports</div>
+            <div class="it">Account Settings</div>
+          </div>
+          <div style="padding: 22px 26px">
+            <div class="row between r">
+              <span class="ann">2</span>
+              <div class="h lg">Instructor Dashboard</div>
+              <div class="row">
+                <span class="btn">+ New cohort</span><span class="btn p">Assign scenario</span>
+              </div>
+            </div>
+            <div
+              class="row r"
+              style="gap: 18px; border-bottom: 2px solid var(--fill); margin: 14px 0; padding-bottom: 6px"
+            >
+              <span class="ann">3</span
+              ><b style="border-bottom: 3px solid var(--ink); margin-left: 14px">Cohort A</b
+              ><span class="t">Cohort B</span><span class="t">Cohort C</span>
+            </div>
+            <div class="g r" style="grid-template-columns: repeat(4, 1fr)">
+              <span class="ann">4</span>
+              <div class="box">
+                <div class="t">Learners enrolled</div>
+                <b style="font-size: 22px">32</b>
+              </div>
+              <div class="box">
+                <div class="t">Completion</div>
+                <b style="font-size: 22px">28 / 32</b>
+              </div>
+              <div class="box">
+                <div class="t">Average score</div>
+                <b style="font-size: 22px">74%</b>
+              </div>
+              <div class="box r">
+                <span class="ann" style="left: auto; right: -11px">5</span>
+                <div class="t">Join code</div>
+                <b style="font-size: 18px; letter-spacing: 0.08em">ABCD-1234</b>
+              </div>
+            </div>
+            <div class="g" style="grid-template-columns: 1fr 1.6fr; margin-top: 14px; align-items: start">
+              <div class="box r">
+                <span class="ann">6</span><b>Active assignments</b>
+                <table class="tbl">
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Due</th>
+                    <th>Done</th>
+                  </tr>
+                  <tr>
+                    <td>Scenario A</td>
+                    <td>date</td>
+                    <td>28/32</td>
+                  </tr>
+                  <tr>
+                    <td>Scenario B</td>
+                    <td>date</td>
+                    <td>3/32</td>
+                  </tr>
+                </table>
+                <b style="display: block; margin-top: 10px" class="r"
+                  >Score distribution<span class="ann" style="left: auto; right: -6px">7</span></b
+                >
+                <div class="row" style="align-items: flex-end; height: 80px; gap: 5px; margin-top: 6px">
+                  <div style="flex: 1; height: 10%; background: #9ca3af"></div>
+                  <div style="flex: 1; height: 22%; background: #9ca3af"></div>
+                  <div style="flex: 1; height: 38%; background: #9ca3af"></div>
+                  <div style="flex: 1; height: 64%; background: #9ca3af"></div>
+                  <div style="flex: 1; height: 100%; background: #9ca3af"></div>
+                  <div style="flex: 1; height: 72%; background: #9ca3af"></div>
+                  <div style="flex: 1; height: 30%; background: #9ca3af"></div>
+                </div>
+                <div class="t" style="margin-top: 6px">Most common mistake: ___________</div>
+              </div>
+              <div class="box r">
+                <span class="ann">8</span>
+                <div class="row between">
+                  <b>Learner results · Scenario A</b
+                  ><span class="btn r"
+                    >⬇ Export CSV<span class="ann" style="left: auto; right: -14px">9</span></span
+                  >
+                </div>
+                <table class="tbl" style="margin-top: 6px">
+                  <tr>
+                    <th>Learner</th>
+                    <th>Score</th>
+                    <th>Attempts</th>
+                    <th>Recovery</th>
+                    <th>Strategy</th>
+                    <th></th>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="row" style="gap: 6px"
+                        ><span class="av" style="width: 20px; height: 20px"></span>Name</span
+                      >
+                    </td>
+                    <td>86%</td>
+                    <td>2</td>
+                    <td>2m 04s</td>
+                    <td>Direct</td>
+                    <td><u>Debrief</u></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="row" style="gap: 6px"
+                        ><span class="av" style="width: 20px; height: 20px"></span>Name</span
+                      >
+                    </td>
+                    <td>94%</td>
+                    <td>1</td>
+                    <td>1m 31s</td>
+                    <td>Canary</td>
+                    <td><u>Debrief</u></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="row" style="gap: 6px"
+                        ><span class="av" style="width: 20px; height: 20px"></span>Name</span
+                      >
+                    </td>
+                    <td>58%</td>
+                    <td>3</td>
+                    <td>6m 12s</td>
+                    <td>Direct</td>
+                    <td><u>Debrief</u></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="row" style="gap: 6px"
+                        ><span class="av" style="width: 20px; height: 20px"></span>Name</span
+                      >
+                    </td>
+                    <td>42%</td>
+                    <td>1</td>
+                    <td>not recovered ⚑</td>
+                    <td>Direct</td>
+                    <td><u>Debrief</u></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="row" style="gap: 6px"
+                        ><span class="av" style="width: 20px; height: 20px"></span>Name</span
+                      >
+                    </td>
+                    <td>77%</td>
+                    <td>2</td>
+                    <td>3m 05s</td>
+                    <td>Direct</td>
+                    <td><u>Debrief</u></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="id">WF-06 · INSTRUCTOR</div>
+        <h2>Instructor Dashboard</h2>
+        <p class="purpose">Let a busy instructor run a lab without manual grading (FR-17, FR-18).</p>
+        <ol>
+          <li><b>Instructor sidebar</b>: different menu for the role (FR-02).</li>
+          <li><b>Primary actions</b>: New cohort, Assign scenario (opens modals).</li>
+          <li><b>Cohort switcher tabs</b>: only the instructor's own cohorts (NFR-13).</li>
+          <li><b>KPI tiles</b>: enrolment, completion, average score.</li>
+          <li><b>Join code</b> to share with students.</li>
+          <li><b>Assignments</b> with deadlines and progress.</li>
+          <li><b>Score distribution</b> + most common mistake.</li>
+          <li><b>Results table</b>: drill down to any learner's debrief; struggling learners flagged.</li>
+          <li><b>CSV export</b> for the gradebook.</li>
+        </ol>
+        <div class="nav-note">
+          <b>Navigation:</b> Assign → modal (scenario, deadline, randomise faults) · Debrief link → learner's
+          Debrief.
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

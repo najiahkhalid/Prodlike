@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign up — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      .auth {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 100vh;
+      }
+      .auth-side {
+        background: var(--secondary);
+        color: #cbd5e1;
+        padding: 48px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .auth-side h2 {
+        color: #fff;
+        font-size: 30px;
+      }
+      .term {
+        background: #020617;
+        border: 1px solid #1e293b;
+        border-radius: var(--r);
+        padding: 18px;
+        font: 13px/1.8 var(--font-mono);
+        color: #94a3b8;
+      }
+      .term .g {
+        color: #4ade80;
+      }
+      .term .c {
+        color: #22d3ee;
+      }
+      .term .r {
+        color: #f87171;
+      }
+      .auth-form {
+        display: grid;
+        place-items: center;
+        padding: 48px 24px;
+      }
+      .auth-form form {
+        width: 100%;
+        max-width: 400px;
+      }
+      .field {
+        margin-bottom: 16px;
+      }
+      @media (max-width: 900px) {
+        .auth {
+          grid-template-columns: 1fr;
+        }
+        .auth-side {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth">
+      <aside class="auth-side">
+        <a class="logo" style="color: #fff" href="index.html"
+          ><span class="logo-mark" style="background: var(--primary)"
+            ><svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 17l6-6-6-6" />
+              <path d="M12 19h8" /></svg></span
+          >Prodlike</a
+        >
+        <div>
+          <h2>Practise the parts of the job nobody teaches.</h2>
+          <div class="term mt3">
+            <div><span class="c">$</span> npm test</div>
+            <div><span class="g">✓</span> 14 passed <span class="r">✕ 1 failed</span></div>
+            <div><span class="c">$</span> git commit -m "fix: discount boundary"</div>
+            <div><span class="c">$</span> deploy --strategy canary</div>
+            <div><span class="r">⚠ payments-service 5xx 38%</span></div>
+            <div>
+              <span class="c">$</span> rollback v1.4.1 <span class="g">✓ service restored in 2m 04s</span>
+            </div>
+          </div>
+        </div>
+        <p class="small mb0">“The debrief told me exactly which decision cost me points.” — pilot learner</p>
+      </aside>
+
+      <main class="auth-form">
+        <form id="f" novalidate>
+          <h1 id="title" style="font-size: 30px">Create your account</h1>
+          <p class="muted" id="sub">Free for students. Takes under a minute.</p>
+
+          <div class="field" id="roleField">
+            <label class="f">I am a…</label>
+            <div class="seg" role="tablist">
+              <button type="button" class="on" data-role="learner" role="tab" aria-selected="true">
+                Learner
+              </button>
+              <button type="button" data-role="instructor" role="tab" aria-selected="false">
+                Instructor
+              </button>
+            </div>
+          </div>
+          <div class="field" id="nameField">
+            <label class="f" for="name">Full name</label><input class="input" id="name" value="Ali Raza" />
+          </div>
+          <div class="field">
+            <label class="f" for="email">Email</label
+            ><input class="input" id="email" type="email" value="ali.raza@seecs.edu.pk" />
+          </div>
+          <div class="field" id="orgField">
+            <label class="f" for="org">University / organisation</label
+            ><input class="input" id="org" value="NUST SEECS" />
+          </div>
+          <div class="field">
+            <label class="f" for="pw">Password</label
+            ><input class="input" id="pw" type="password" value="••••••••••" />
+            <div class="xsmall muted mt1">At least 10 characters.</div>
+          </div>
+          <div class="field" id="joinField">
+            <label class="f" for="join"
+              >Cohort join code <span class="muted" style="font-weight: 400">(optional)</span></label
+            ><input class="input mono" id="join" placeholder="e.g. BSCS12-LAB6" />
+          </div>
+
+          <button class="btn btn-primary btn-lg" style="width: 100%" id="submit">Create account</button>
+          <p class="small muted mt2" id="switch" style="text-align: center">
+            Already have an account? <a href="?mode=login">Log in</a>
+          </p>
+          <p class="small" style="text-align: center">
+            <a href="#" data-toast="Password reset link sent to your email (prototype)." id="forgot" hidden
+              >Forgot password?</a
+            >
+          </p>
+          <p class="xsmall muted" style="text-align: center">
+            Just looking? <a href="brief.html?guest=1">Try the demo without an account →</a>
+          </p>
+        </form>
+      </main>
+    </div>
+    <script src="assets/app.js"></script>
+    <script>
+      const qs = new URLSearchParams(location.search);
+      let role = qs.get('role') === 'instructor' ? 'instructor' : 'learner';
+      const login = qs.get('mode') === 'login';
+      const segs = document.querySelectorAll('.seg button');
+      function setRole(r) {
+        role = r;
+        segs.forEach((b) => {
+          const on = b.dataset.role === r;
+          b.classList.toggle('on', on);
+          b.setAttribute('aria-selected', on);
+        });
+        document.getElementById('joinField').hidden = r === 'instructor' || login;
+      }
+      segs.forEach((b) => b.addEventListener('click', () => setRole(b.dataset.role)));
+      if (login) {
+        title.textContent = 'Welcome back';
+        sub.textContent = 'Log in to continue your scenarios.';
+        nameField.hidden = orgField.hidden = true;
+        submit.textContent = 'Log in';
+        document.getElementById('switch').innerHTML =
+          'New to Prodlike? <a href="login.html">Create an account</a>';
+        forgot.hidden = false;
+      }
+      setRole(role);
+      document.getElementById('f').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email');
+        if (!email.value.includes('@')) {
+          toast('Enter a valid email address so we can send your confirmation link.', 'bad');
+          email.focus();
+          return;
+        }
+        location.href = role === 'instructor' ? 'instructor.html' : 'dashboard.html?welcome=1';
+      });
+    </script>
+  </body>
+</html>

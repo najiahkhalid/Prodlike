@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scenario Brief — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      .ticket {
+        border-left: 4px solid var(--primary);
+      }
+      .ticket .hdr {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font: 600 13px var(--font-mono);
+        color: var(--muted);
+      }
+      .msg {
+        display: flex;
+        gap: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        padding: 14px;
+      }
+      ol.obj {
+        padding-left: 20px;
+        margin: 0;
+      }
+      ol.obj li {
+        margin: 6px 0;
+      }
+      .rubric div {
+        display: flex;
+        justify-content: space-between;
+        padding: 9px 0;
+        border-bottom: 1px dashed var(--border);
+        font-size: 14px;
+      }
+      .rubric div:last-child {
+        border: 0;
+      }
+      .guest-bar {
+        background: var(--accent-tint);
+        border: 1px solid #a5f3fc;
+        color: var(--accent-text);
+        border-radius: var(--r);
+        padding: 12px 16px;
+        display: none;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+      .brief-wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 28px 24px 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shell">
+      <nav class="nav" aria-label="Main" id="guestNav" hidden>
+        <div class="container">
+          <a class="logo" href="index.html"
+            ><span class="logo-mark"
+              ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+                <path d="M4 17l6-6-6-6" />
+                <path d="M12 19h8" /></svg></span
+            >Prodlike</a
+          >
+          <div class="spacer"></div>
+          <a class="btn btn-ghost" href="login.html?mode=login">Log in</a
+          ><a class="btn btn-primary" href="login.html">Sign up free</a>
+        </div>
+      </nav>
+      <div class="app" id="appShell">
+        <nav class="sidebar" id="sidebar" aria-label="Learner navigation"></nav>
+        <main class="main" id="content">
+          <div class="guest-bar" id="guestBar">
+            <b>Guest demo.</b> You're trying a shortened version of this scenario. Your result won't be saved
+            unless you <a href="login.html">create an account</a>.
+          </div>
+          <div class="page-head">
+            <div>
+              <div class="crumbs"><a href="catalogue.html">Scenarios</a> / Brief</div>
+              <h1>The Rs 1,000 Discount Bug</h1>
+              <div class="row mt1 wrap">
+                <span class="badge ok">Beginner</span><span class="badge">Bug fix</span
+                ><span class="badge">Testing</span><span class="badge">Rollback</span
+                ><span class="small muted">⏱ about 5–10 minutes</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns: 1.6fr 1fr; align-items: start">
+            <div>
+              <div class="card ticket">
+                <div class="hdr">
+                  <span class="badge bad">P2 · Bug</span>BYTE-482 · reported by Customer Support
+                </div>
+                <h3 class="mt2">
+                  Customers with an order of exactly Rs 1,000 are not getting the 10% discount
+                </h3>
+                <p>
+                  Our promo says “10% off on orders of Rs 1,000 or more”. Support has 23 complaints today from
+                  customers whose basket was exactly Rs 1,000. Fix the discount rule, make sure it's covered
+                  by a test, and ship it to production before the evening rush.
+                </p>
+              </div>
+
+              <div class="card mt3">
+                <h3>Company context</h3>
+                <p class="small">
+                  ByteBite is a food-delivery startup. The <code>orders-service</code> calculates totals and
+                  calls <code>payments-service</code>. You're joining the platform team this week.
+                </p>
+                <div class="msg">
+                  <span class="avatar" style="background: var(--accent-text)">SK</span>
+                  <div>
+                    <b style="color: var(--text)">Sana (Senior Engineer)</b>
+                    <div class="small">
+                      Heads-up: there's a config change in the same release train for payments timeouts. Keep
+                      an eye on the dashboards after you deploy 👀
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card mt3">
+                <h3>Your objectives</h3>
+                <ol class="obj">
+                  <li>Find and fix the discount boundary bug in <code>orders-service</code>.</li>
+                  <li>Add or update a test that proves the fix.</li>
+                  <li>Ship the change through the CI/CD pipeline.</li>
+                  <li>Watch production for 2 minutes and resolve any incident that appears.</li>
+                </ol>
+                <h4 class="mt3">Constraints</h4>
+                <p class="small mb0">
+                  Terminal is limited to: <code>npm test</code>, <code>git diff</code>, <code>git log</code>,
+                  <code>logs</code>, <code>rollback</code>. Hints are available but each costs rubric points.
+                </p>
+              </div>
+            </div>
+
+            <aside>
+              <div class="card">
+                <h3>How you'll be scored</h3>
+                <div class="rubric">
+                  <div><span>Correctness — fix works for all cases</span><b>30</b></div>
+                  <div><span>Testing — boundary case covered</span><b>25</b></div>
+                  <div><span>Deployment safety — pipeline green, strategy</span><b>20</b></div>
+                  <div><span>Recovery — time to restore service</span><b>25</b></div>
+                </div>
+                <p class="xsmall muted mt2">
+                  Any valid solution that passes the checks gets full marks. Each hint used: −5.
+                </p>
+                <a class="btn btn-primary btn-lg mt2" style="width: 100%" href="workspace.html" id="start"
+                  >▶ Start attempt</a
+                >
+                <p class="xsmall muted mt1" style="text-align: center">
+                  A private sandbox starts in about 10 seconds.
+                </p>
+              </div>
+              <div class="card mt3 flat">
+                <h4>Your attempts</h4>
+                <p class="small muted mb0">
+                  Attempt 1 · 72% · 3 days ago · <a href="debrief.html">debrief</a>
+                </p>
+              </div>
+            </aside>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script src="assets/app.js"></script>
+    <script>
+      const guest = new URLSearchParams(location.search).get('guest');
+      if (guest) {
+        sidebar.remove();
+        appShell.style.display = 'block';
+        guestNav.hidden = false;
+        content.classList.add('brief-wrap');
+        guestBar.style.display = 'block';
+        start.href = 'workspace.html?guest=1';
+        document.querySelector('.crumbs').innerHTML = '<a href="index.html">Home</a> / Demo scenario';
+        document.querySelector('aside .flat').remove();
+      } else renderSidebar('Scenarios', 'learner');
+    </script>
+  </body>
+</html>
