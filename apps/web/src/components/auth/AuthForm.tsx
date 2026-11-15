@@ -66,6 +66,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
         {signup ? 'Free for students. Takes under a minute.' : 'Log in to continue your scenarios.'}
       </p>
 
+      {signup && params.get('claim') && !formError && (
+        <p role="status" className="mb-4 rounded-sm bg-accent-tint px-3 py-2.5 text-sm text-accent-text">
+          Your demo attempt and its debrief will be saved to your new account.
+        </p>
+      )}
       {params.get('loggedOut') && !formError && (
         <p role="status" className="mb-4 rounded-sm bg-ok-tint px-3 py-2.5 text-sm text-ok-text">
           You have been logged out.

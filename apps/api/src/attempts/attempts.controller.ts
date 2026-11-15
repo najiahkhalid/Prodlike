@@ -8,7 +8,9 @@ import {
   type AttemptView,
   type CommandInput,
   type CommandResult,
+  type Debrief,
   type DeployInput,
+  type HintResult,
   type EngineSnapshot,
   type SaveFileInput,
   type StartAttemptInput,
@@ -91,11 +93,23 @@ export class AttemptsController {
     return this.attempts.rollback(user, id);
   }
 
-  /** Finish once production is healthy. */
+  /** Finish once production is healthy: scores the attempt and returns the debrief (FR-14, FR-15). */
   @HttpCode(200)
   @Post(':id/finish')
-  finish(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string): Promise<EngineSnapshot> {
+  finish(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string): Promise<Debrief> {
     return this.attempts.finish(user, id);
+  }
+
+  @Get(':id/debrief')
+  debrief(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string): Promise<Debrief> {
+    return this.attempts.debrief(user, id);
+  }
+
+  /** A context-aware hint; each one costs rubric points. */
+  @HttpCode(200)
+  @Post(':id/hints')
+  hint(@CurrentUser() user: AccessTokenClaims, @Param('id') id: string): Promise<HintResult> {
+    return this.attempts.useHint(user, id);
   }
 
   @HttpCode(200)

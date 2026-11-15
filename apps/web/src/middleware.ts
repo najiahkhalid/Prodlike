@@ -5,15 +5,18 @@ import { AUTH_COOKIES, homeFor, type AccessTokenClaims, type Role } from '@prodl
 /**
  * Route protection (FR-02). The middleware only decides where a visitor may GO;
  * the API re-checks every request, so a forged cookie still gets nothing.
+ *
+ * 'members' = any signed-in account except a guest. Guests (the no-sign-up demo) may only use
+ * their demo attempt and its debrief; anything else invites them to sign up and keep their result.
  */
-const RULES: { prefix: string; roles: Role[] | 'any' }[] = [
+const RULES: { prefix: string; roles: Role[] | 'members' | 'everyone' }[] = [
   { prefix: '/admin', roles: ['ADMIN'] },
   { prefix: '/instructor', roles: ['INSTRUCTOR', 'ADMIN'] },
-  { prefix: '/dashboard', roles: 'any' },
-  { prefix: '/scenarios', roles: 'any' },
-  { prefix: '/attempts', roles: 'any' },
-  { prefix: '/progress', roles: 'any' },
-  { prefix: '/settings', roles: 'any' },
+  { prefix: '/dashboard', roles: 'members' },
+  { prefix: '/scenarios', roles: 'everyone' },
+  { prefix: '/attempts', roles: 'everyone' },
+  { prefix: '/progress', roles: 'members' },
+  { prefix: '/settings', roles: 'members' },
 ];
 const AUTH_PAGES = ['/login', '/signup'];
 
@@ -35,9 +38,10 @@ export async function middleware(req: NextRequest) {
   const session = await readSession(req);
   const hasRefresh = Boolean(req.cookies.get(AUTH_COOKIES.refresh)?.value);
 
-  // Signed-in visitors do not need the login/sign-up pages.
+  // Signed-in members do not need the login/sign-up pages (guests do: signing up keeps their demo).
   if (AUTH_PAGES.includes(pathname)) {
-    if (session) return NextResponse.redirect(new URL(homeFor(session.role), req.url));
+    if (session && session.role !== 'GUEST')
+      return NextResponse.redirect(new URL(homeFor(session.role), req.url));
     return NextResponse.next();
   }
 
@@ -50,7 +54,10 @@ export async function middleware(req: NextRequest) {
     const target = hasRefresh ? `/auth/refresh?next=${nextParam}` : `/login?next=${nextParam}`;
     return NextResponse.redirect(new URL(target, req.url));
   }
-  if (rule.roles !== 'any' && !rule.roles.includes(session.role)) {
+  if (session.role === 'GUEST' && rule.roles !== 'everyone') {
+    return NextResponse.redirect(new URL('/signup?claim=1', req.url));
+  }
+  if (Array.isArray(rule.roles) && !rule.roles.includes(session.role)) {
     const url = new URL(homeFor(session.role), req.url);
     url.searchParams.set('denied', pathname);
     return NextResponse.redirect(url);

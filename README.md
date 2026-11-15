@@ -4,7 +4,7 @@
 
 CS344 Web Engineering · NUST SEECS · Team Prodlike: Najiah Khalid (lead), Zeeshan Haider Awan, Bilal Ahmed.
 
-> **Status: Phase 3 (Scenario engine).** The full story runs live: fix the bug, ship it through a real CI/CD pipeline (build, lint, test in the sandbox), deploy direct or canary, survive the injected incident on the live 3D/2D system map, then recover by rollback or hotfix. Next: Phase 4, scoring, debrief, hints and the guest demo.
+> **Status: Phase 4 (Scoring + debrief).** Finishing an attempt runs hidden behavioural checks and scores the rubric; learners get a debrief (score, reasons, decision timeline, senior-engineer tips, badges), progress history and paid hints. Visitors can play a no-sign-up guest demo and keep the result by signing up. Next: Phase 5, instructor cohorts, assignments and reports.
 
 ## Repository layout
 
@@ -57,6 +57,7 @@ The landing page shows a **Platform status** card that calls the API's `/health`
 - **Auth** (ADR-004): a 15-minute access JWT (`pl_at`) and a rotating refresh token (`pl_rt`), both httpOnly cookies. The API enforces roles on every endpoint. `src/middleware.ts` in the web app only decides which pages a role may open, and silently renews expired sessions through `/auth/refresh`.
 - **Sandboxes** (ADR-005, ADR-006): starting an attempt claims a warm container from a pool: no network, non-root, read-only system files, 512 MB / 1 CPU / 128 processes. The terminal never runs a shell; commands are checked against the scenario's allowlist. Saved files are also kept in the database, so a lost container is rebuilt without losing work. Attempts idle for 60 minutes are cleaned up.
 - **Scenario engine** (ADR-007): one state machine per attempt. The pipeline's build, lint and test stages run for real in the sandbox; the deploy, production metrics, logs and incidents are simulated from the scenario file. Live updates reach the browser over Socket.IO (`/api/socket.io` behind Caddy, the API port with `pnpm dev`), with polling as a fallback.
+- **Scoring** (ADR-008): at finish the hidden tests are copied into the sandbox and run, regex checks read the workspace, and the event timeline supplies deployment and recovery facts. Any valid solution passing the hidden checks scores full correctness. The debrief is stored with the attempt.
 - **Scenarios** are read from `scenarios/` when the API starts and stored as immutable `ScenarioVersion` rows. The public catalogue and brief never include faults, hidden tests or hints.
 
 ## Tests

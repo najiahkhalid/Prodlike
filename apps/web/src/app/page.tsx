@@ -33,14 +33,16 @@ export default async function LandingPage() {
             CI/CD, then handle whatever breaks next. Every decision is scored and explained.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/signup" className={buttonClasses('primary', 'lg')}>
+            <Link href="/demo" className={buttonClasses('primary', 'lg')}>
+              ▶ Try a 5-minute demo, no sign-up
+            </Link>
+            <Link href="/signup" className={buttonClasses('secondary', 'lg')}>
               Create a free account
             </Link>
-            <a href="#how" className={buttonClasses('secondary', 'lg')}>
-              How it works
-            </a>
           </div>
-          <p className="mt-3 text-sm text-ink-muted">Free for students. A no-sign-up demo is coming soon.</p>
+          <p className="mt-3 text-sm text-ink-muted">
+            Free for students. The demo needs no account and keeps your result for 24 hours.
+          </p>
         </div>
       </header>
 

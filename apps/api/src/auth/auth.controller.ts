@@ -38,8 +38,22 @@ export class AuthController {
   register(
     @Body(new ZodPipe(RegisterSchema)) body: z.output<typeof RegisterSchema>,
     @Res({ passthrough: true }) res: Response,
+    @CurrentUser() current?: AccessTokenClaims,
   ): Promise<Me> {
-    return this.auth.register(body, res);
+    return this.auth.register(body, res, current);
+  }
+
+  /** Guest demo: a temporary session without sign-up (rate-limited like sign-up). */
+  @Public()
+  @Throttle(authLimit())
+  @HttpCode(201)
+  @Post('guest')
+  async guest(
+    @Res({ passthrough: true }) res: Response,
+    @CurrentUser() current?: AccessTokenClaims,
+  ): Promise<Me> {
+    if (current) return this.auth.me(current.sub);
+    return this.auth.createGuest(res);
   }
 
   @Public()

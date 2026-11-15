@@ -14,6 +14,7 @@ import type {
 import { ClientApiError, clientApi } from '@/lib/client-api';
 import { CodeEditor } from './CodeEditor';
 import { Explorer, TerminalPanel, TestsPanel, type TerminalLine } from './panels';
+import { HintDialog } from './HintDialog';
 import { DeployDialog } from './system/DeployDialog';
 import { SystemPanel } from './system/SystemPanel';
 import { useEngine, type RealtimeConfig } from './useEngine';
@@ -43,6 +44,7 @@ export function Workspace({ initial, realtime }: { initial: AttemptView; realtim
     realtime,
   );
   const [deployOpen, setDeployOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const [engineBusy, setEngineBusy] = useState(false);
   const [view, setView] = useState(initial);
   const [open, setOpen] = useState(initial.scenario.entryFile);
@@ -196,7 +198,7 @@ export function Workspace({ initial, realtime }: { initial: AttemptView; realtim
     await flush();
     try {
       await clientApi(`/attempts/${view.id}/finish`, { method: 'POST' });
-      router.refresh();
+      router.push(`/attempts/${view.id}/debrief`);
     } catch (e) {
       setLines((l) => [...l, { kind: 'system', text: fail(e) }]);
       setBottom('terminal');
@@ -278,8 +280,21 @@ export function Workspace({ initial, realtime }: { initial: AttemptView; realtim
         >
           {elapsed}
         </span>
-        <button type="button" disabled title="Hints arrive in Phase 4" className="ws-btn">
-          💡 Hint
+        {view.guest && (
+          <span className="hidden rounded-full bg-accent-live/15 px-2.5 py-1 text-xs font-semibold text-accent-live lg:inline">
+            Guest demo
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => setHintOpen(true)}
+          className="ws-btn"
+          aria-label={`Hint (costs ${view.hints.penalty} points, ${view.hints.used.length} used)`}
+        >
+          💡 Hint <span className="text-warn-dark">−{view.hints.penalty}</span>
+          {view.hints.used.length > 0 && (
+            <span className="text-console-muted">· {view.hints.used.length}</span>
+          )}
         </button>
         {engine.canFinish ? (
           <button type="button" onClick={finish} className="ws-btn border-green-700 bg-green-700 text-white">
@@ -409,6 +424,23 @@ export function Workspace({ initial, realtime }: { initial: AttemptView; realtim
           )}
         </div>
       </section>
+
+      <HintDialog
+        attemptId={view.id}
+        hints={view.hints}
+        open={hintOpen}
+        onClose={() => setHintOpen(false)}
+        onUsed={(h) =>
+          setView((v) => ({
+            ...v,
+            hints: {
+              ...v.hints,
+              used: [...v.hints.used, { index: h.index, text: h.text }],
+              remaining: h.remaining,
+            },
+          }))
+        }
+      />
 
       <DeployDialog
         open={deployOpen}

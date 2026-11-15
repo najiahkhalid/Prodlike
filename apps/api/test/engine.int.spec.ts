@@ -176,7 +176,8 @@ run('Scenario engine (Phase 3)', () => {
 
     it('finishing completes the attempt and frees the sandbox', async () => {
       const res = await ali.post(`/attempts/${id}/finish`).expect(200);
-      expect(res.body.state).toBe('COMPLETED');
+      // Since Phase 4, finishing returns the scored debrief.
+      expect(res.body).toMatchObject({ attemptId: id, score: expect.any(Number) });
       const row = await prisma.attempt.findUniqueOrThrow({ where: { id } });
       expect(row).toMatchObject({ state: 'COMPLETED', containerId: null });
       expect(row.endedAt).toBeTruthy();

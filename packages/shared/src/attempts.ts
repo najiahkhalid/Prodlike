@@ -44,6 +44,10 @@ export interface AttemptView {
   provisionedInMs?: number;
   /** Production as the scenario engine sees it (Phase 3). */
   engine: EngineSnapshot;
+  /** Hints (A2 refinement 3): what has been revealed so far, and the cost of each. */
+  hints: { used: { index: number; text: string }[]; remaining: number; penalty: number };
+  /** Guest demo attempts are not saved unless the guest signs up (Phase 4). */
+  guest: boolean;
 }
 
 export interface CommandResult {
