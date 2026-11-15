@@ -4,7 +4,7 @@
 
 CS344 Web Engineering · NUST SEECS · Team Prodlike: Najiah Khalid (lead), Zeeshan Haider Awan, Bilal Ahmed.
 
-> **Status: Phase 1 (Accounts, app shell, catalogue).** Sign-up, log-in, roles, password reset, onboarding tour, scenario catalogue and briefs, and admin publishing all work. Next: Phase 2, the sandbox runner and workspace.
+> **Status: Phase 2 (Sandbox + workspace).** Learners start an attempt and get a private, locked-down Docker sandbox with a code editor, a restricted terminal and real test runs. Their work survives a refresh or a lost container. Next: Phase 3, the CI/CD pipeline, incidents and the live system map.
 
 ## Repository layout
 
@@ -43,6 +43,7 @@ docker compose -f infra/docker-compose.yml --env-file .env up --build
 docker compose -f infra/docker-compose.yml --env-file .env up -d postgres
 pnpm db:migrate                           # apply migrations
 pnpm --filter @prodlike/api db:seed       # admin account + badges
+pnpm scenarios:build                      # sandbox images (needed to start attempts)
 pnpm dev                                  # web on :3000, API on :4000
 ```
 
@@ -54,14 +55,15 @@ The landing page shows a **Platform status** card that calls the API's `/health`
 
 - The browser only ever calls **same-origin `/api/*`**. In Docker, Caddy routes `/api` to the API. On the host, the Next.js route `src/app/api/[...path]` proxies it. Auth cookies are therefore first-party.
 - **Auth** (ADR-004): a 15-minute access JWT (`pl_at`) and a rotating refresh token (`pl_rt`), both httpOnly cookies. The API enforces roles on every endpoint. `src/middleware.ts` in the web app only decides which pages a role may open, and silently renews expired sessions through `/auth/refresh`.
+- **Sandboxes** (ADR-005, ADR-006): starting an attempt claims a warm container from a pool: no network, non-root, read-only system files, 512 MB / 1 CPU / 128 processes. The terminal never runs a shell; commands are checked against the scenario's allowlist. Saved files are also kept in the database, so a lost container is rebuilt without losing work. Attempts idle for 60 minutes are cleaned up.
 - **Scenarios** are read from `scenarios/` when the API starts and stored as immutable `ScenarioVersion` rows. The public catalogue and brief never include faults, hidden tests or hints.
 
 ## Tests
 
-| Command                           | What it runs                                                                                  |
-| --------------------------------- | --------------------------------------------------------------------------------------------- |
-| `pnpm test`                       | Unit tests, plus API integration tests when `DATABASE_URL_TEST` points at a migrated database |
-| `pnpm --filter @prodlike/e2e e2e` | Playwright browser tests against the built apps (run `pnpm build` first)                      |
+| Command                           | What it runs                                                                                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test`                       | Unit tests; API integration tests when `DATABASE_URL_TEST` points at a migrated database; real-Docker sandbox tests when `SANDBOX_TESTS=1` (after `pnpm scenarios:build`) |
+| `pnpm --filter @prodlike/e2e e2e` | Playwright browser tests against the built apps (run `pnpm build` first)                                                                                                  |
 
 Local setup for the database-backed tests (Postgres from Docker running):
 
@@ -74,8 +76,9 @@ DATABASE_URL=postgresql://prodlike:prodlike@localhost:5432/prodlike_e2e pnpm pri
 DATABASE_URL=postgresql://prodlike:prodlike@localhost:5432/prodlike_e2e \
   ADMIN_EMAIL=admin@e2e.test ADMIN_PASSWORD=admin-password-123 pnpm db:seed
 cd ../..
-DATABASE_URL_TEST=postgresql://prodlike:prodlike@localhost:5432/prodlike_test pnpm test
-pnpm build && PW_CHANNEL=chrome pnpm --filter @prodlike/e2e e2e   # uses your installed Chrome
+pnpm scenarios:build
+SANDBOX_TESTS=1 DATABASE_URL_TEST=postgresql://prodlike:prodlike@localhost:5432/prodlike_test pnpm test
+pnpm build && SANDBOX_TESTS=1 PW_CHANNEL=chrome pnpm --filter @prodlike/e2e e2e   # uses your installed Chrome
 ```
 
 ## Common scripts

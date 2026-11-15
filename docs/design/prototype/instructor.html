@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Instructor Dashboard — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      .cohort-tabs {
+        display: flex;
+        gap: 6px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 20px;
+      }
+      .cohort-tabs button {
+        border: 0;
+        background: none;
+        padding: 10px 14px;
+        font: 600 14px var(--font-body);
+        color: var(--muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+      .cohort-tabs button.on {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+      }
+      .join {
+        font: 700 20px var(--font-mono);
+        letter-spacing: 0.08em;
+        color: var(--text);
+        background: var(--primary-tint);
+        padding: 10px 14px;
+        border-radius: var(--r-sm);
+        display: inline-block;
+      }
+      .dist {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        height: 110px;
+        padding-top: 10px;
+      }
+      .dist div {
+        flex: 1;
+        background: var(--primary);
+        border-radius: 4px 4px 0 0;
+        position: relative;
+      }
+      .dist div span {
+        position: absolute;
+        bottom: -20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .flag {
+        color: var(--bad);
+        font-weight: 600;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="sidebar" id="sidebar" aria-label="Instructor navigation"></nav>
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="crumbs">Instructor</div>
+            <h1>Instructor Dashboard</h1>
+          </div>
+          <div class="row">
+            <button class="btn btn-secondary" onclick="openModal('cohortModal')">+ New cohort</button
+            ><button class="btn btn-primary" onclick="openModal('assignModal')">Assign scenario</button>
+          </div>
+        </div>
+
+        <div class="cohort-tabs" role="tablist">
+          <button class="on">BSCS-12 · Lab</button
+          ><button data-toast="Switched cohort (prototype shows one cohort).">BESE-13 · Lab</button
+          ><button data-toast="Switched cohort (prototype shows one cohort).">Bootcamp Winter</button>
+        </div>
+
+        <div class="grid g4">
+          <div class="card stat">
+            <div class="label">Learners enrolled</div>
+            <div class="value">32</div>
+            <div class="small muted">2 pending invites</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Lab 6 completion</div>
+            <div class="value">28 / 32</div>
+            <div class="delta up">88%</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Average score</div>
+            <div class="value">74%</div>
+            <div class="delta up">▲ 9% vs Lab 5</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Join code</div>
+            <div class="join mt1">BSCS12-LAB6</div>
+          </div>
+        </div>
+
+        <div class="grid mt3" style="grid-template-columns: 1fr 1.6fr; align-items: start">
+          <div class="card">
+            <h3>Active assignments</h3>
+            <table class="t">
+              <tr>
+                <th>Scenario</th>
+                <th>Due</th>
+                <th>Done</th>
+              </tr>
+              <tr>
+                <td>Friday Deploy Gone Wrong</td>
+                <td>Nov 17</td>
+                <td>28/32</td>
+              </tr>
+              <tr>
+                <td>The Missing Env Variable</td>
+                <td>Nov 29</td>
+                <td>3/32</td>
+              </tr>
+            </table>
+            <h4 class="mt3">Score distribution · Lab 6</h4>
+            <div class="dist" aria-label="Score distribution histogram">
+              <div style="height: 10%; background: var(--warn)"><span>&lt;40</span></div>
+              <div style="height: 22%; background: var(--warn)"><span>40s</span></div>
+              <div style="height: 38%"><span>50s</span></div>
+              <div style="height: 64%"><span>60s</span></div>
+              <div style="height: 100%"><span>70s</span></div>
+              <div style="height: 72%; background: var(--ok)"><span>80s</span></div>
+              <div style="height: 30%; background: var(--ok)"><span>90+</span></div>
+            </div>
+            <p class="small muted mt4 mb0">
+              Most common mistake: <b>deployed directly without checking the release train</b> (19 learners).
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="row between">
+              <h3 class="mb0">Learner results · Friday Deploy Gone Wrong</h3>
+              <button class="btn btn-secondary btn-sm" id="csv">⬇ Export CSV</button>
+            </div>
+            <table class="t mt2" id="results">
+              <thead>
+                <tr>
+                  <th>Learner</th>
+                  <th>Score</th>
+                  <th>Attempts</th>
+                  <th>Recovery</th>
+                  <th>Strategy</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-bg" id="assignModal" role="dialog" aria-modal="true" aria-labelledby="amT">
+      <div class="modal">
+        <h3 id="amT">Assign a scenario</h3>
+        <label class="f mt2" for="as">Scenario</label>
+        <select class="input" id="as">
+          <option>The Missing Env Variable</option>
+          <option>Add Appointment Reminders</option>
+          <option>The Rs 1,000 Discount Bug</option>
+        </select>
+        <label class="f mt2" for="ad">Deadline</label
+        ><input class="input" id="ad" type="date" value="2026-11-29" />
+        <label class="row mt2 small"
+          ><input type="checkbox" checked /> Randomise injected faults per learner</label
+        >
+        <div class="row mt3" style="justify-content: flex-end">
+          <button class="btn btn-ghost" onclick="closeModal('assignModal')">Cancel</button
+          ><button
+            class="btn btn-primary"
+            onclick="closeModal('assignModal');toast('Scenario assigned to BSCS-12 · 32 learners notified.','ok')"
+          >
+            Assign
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-bg" id="cohortModal" role="dialog" aria-modal="true" aria-labelledby="cmT">
+      <div class="modal">
+        <h3 id="cmT">Create a cohort</h3>
+        <label class="f mt2" for="cn">Cohort name</label
+        ><input class="input" id="cn" placeholder="e.g. BSCS-12 Section B" />
+        <p class="small muted mt2">
+          Learners join with a code you share. You'll only see data for your own cohorts.
+        </p>
+        <div class="row mt3" style="justify-content: flex-end">
+          <button class="btn btn-ghost" onclick="closeModal('cohortModal')">Cancel</button
+          ><button
+            class="btn btn-primary"
+            onclick="closeModal('cohortModal');toast('Cohort created. Join code: BSCS12-B7Q4','ok')"
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+    <script>
+      renderSidebar('Instructor Dashboard', 'instructor');
+      const rows = [
+        ['Ali Raza', 86, 2, '2m 04s', 'Direct'],
+        ['Ayesha Khan', 94, 1, '1m 31s', 'Canary'],
+        ['Hamza Iqbal', 58, 3, '6m 12s', 'Direct'],
+        ['Fatima Noor', 81, 2, '2m 40s', 'Canary'],
+        ['Usman Tariq', 42, 1, 'not recovered', 'Direct'],
+        ['Mahnoor Ali', 77, 2, '3m 05s', 'Direct'],
+      ];
+      results.querySelector('tbody').innerHTML = rows
+        .map(
+          ([n, s, a, rec, st]) => `<tr>
+    <td><div class="row" style="gap:10px"><span class="avatar" style="width:28px;height:28px;font-size:11px">${n
+      .split(' ')
+      .map((x) => x[0])
+      .join('')}</span>${n}</div></td>
+    <td><span class="badge ${s >= 80 ? 'ok' : s >= 60 ? 'primary' : 'warn'}">${s}%</span></td><td>${a}</td>
+    <td class="mono">${rec}${rec.startsWith('not') ? ' <span class="flag">⚑</span>' : ''}</td><td>${st}</td><td><a href="debrief.html">Debrief</a></td></tr>`,
+        )
+        .join('');
+      csv.addEventListener('click', () => {
+        const text = 'learner,score,attempts,recovery,strategy\n' + rows.map((r) => r.join(',')).join('\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
+        a.download = 'BSCS12-lab6-results.csv';
+        a.click();
+        toast('CSV exported: BSCS12-lab6-results.csv', 'ok');
+      });
+    </script>
+  </body>
+</html>

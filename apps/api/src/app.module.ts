@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AttemptsModule } from './attempts/attempts.module';
 import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env';
 import { HealthModule } from './health/health.module';
@@ -18,6 +19,7 @@ import { ScenariosModule } from './scenarios/scenarios.module';
     HealthModule,
     ScenariosModule,
     InstructorModule,
+    AttemptsModule,
   ],
 })
 export class AppModule {}

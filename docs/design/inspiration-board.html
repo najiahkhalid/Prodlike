@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prodlike Inspiration Board</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="prototype/assets/styles.css" />
+    <style>
+      body {
+        background: #e2e8f0;
+        padding: 30px;
+      }
+      .sheet {
+        width: 1500px;
+        margin: 0 auto 40px;
+        background: #fff;
+        border-radius: 18px;
+        padding: 40px;
+        box-shadow: var(--shadow);
+      }
+      .sheet > h1 {
+        font-size: 34px;
+        margin: 0;
+      }
+      .sheet > .sub {
+        color: var(--muted);
+        margin: 4px 0 28px;
+      }
+      .sec-t {
+        font: 600 12px/1 var(--font-body);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent-text);
+        margin: 0 0 12px;
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .sw {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .sw .c {
+        height: 110px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        color: #fff;
+        font: 700 18px var(--font-head);
+      }
+      .sw .m {
+        padding: 10px 14px;
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+      .sw .m b {
+        color: var(--text);
+      }
+      .status {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .st {
+        border-radius: 10px;
+        padding: 12px;
+        font: 600 13px var(--font-body);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .neutral {
+        display: flex;
+        gap: 0;
+        margin-top: 14px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .neutral div {
+        flex: 1;
+        height: 44px;
+        font: 500 10px var(--font-mono);
+        display: flex;
+        align-items: flex-end;
+        padding: 4px 6px;
+      }
+      .type-row {
+        display: grid;
+        grid-template-columns: 210px 1fr 260px;
+        gap: 20px;
+        align-items: baseline;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .type-row .k {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .type-row .k b {
+        display: block;
+        color: var(--text);
+        font-size: 14px;
+      }
+      .type-row .why {
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 34px;
+      }
+      .three {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .ref {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .ref h4 {
+        margin: 8px 0 4px;
+      }
+      .ref p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0;
+      }
+      .ref .took {
+        font-size: 12.5px;
+        margin-top: 8px;
+        color: var(--text-2);
+      }
+      .ref .took b {
+        color: var(--primary);
+      }
+      .mini {
+        height: 92px;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+      }
+      .tone {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tone span {
+        padding: 8px 14px;
+        border-radius: 999px;
+        font: 600 14px var(--font-body);
+        border: 1px solid var(--border);
+      }
+      .tone span.no {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+      .console {
+        background: #0b1120;
+        border-radius: 12px;
+        padding: 16px;
+        color: #e2e8f0;
+        font: 13px/1.7 var(--font-mono);
+        font-variant-ligatures: none;
+      }
+      /* flow */
+      .flow {
+        position: relative;
+        height: 560px;
+      }
+      .fn {
+        position: absolute;
+        width: 190px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 2px solid var(--secondary);
+        background: #fff;
+        font: 600 14px var(--font-body);
+        color: var(--text);
+        text-align: center;
+      }
+      .fn small {
+        display: block;
+        font-weight: 400;
+        font-size: 11.5px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .fn.pub {
+        background: var(--primary-tint);
+        border-color: var(--primary);
+      }
+      .fn.dark {
+        background: var(--secondary);
+        color: #fff;
+      }
+      .fn.dark small {
+        color: #94a3b8;
+      }
+      .fn.ins {
+        background: var(--accent-tint);
+        border-color: var(--accent-text);
+      }
+      .fn.modal {
+        border-style: dashed;
+      }
+      .flow svg {
+        position: absolute;
+        inset: 0;
+      }
+      .lane {
+        position: absolute;
+        font: 600 11px var(--font-body);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="sheet" id="board">
+      <h1>Prodlike: Inspiration &amp; Visual Identity Board</h1>
+      <p class="sub">
+        CS344 Web Engineering · Assignment 2 · Team Prodlike. Tone:
+        <b>modern, technical, calm, trustworthy.</b> “A professional tool that is safe to fail in.”
+      </p>
+
+      <div class="sec-t">01 · Colour palette</div>
+      <div class="swatches">
+        <div class="sw">
+          <div class="c" style="background: #4f46e5">Primary · Indigo</div>
+          <div class="m">
+            <b>#4F46E5</b> · hover #4338CA<br />Brand, primary buttons, links, active states. <b>6.3:1</b> on
+            white (AA).
+          </div>
+        </div>
+        <div class="sw">
+          <div class="c" style="background: #0f172a">Secondary · Navy</div>
+          <div class="m">
+            <b>#0F172A</b><br />Headings, sidebar, footer and the dark workspace surface. <b>17.9:1</b> on
+            white.
+          </div>
+        </div>
+        <div class="sw">
+          <div class="c" style="background: #06b6d4; color: #0f172a">Accent · Cyan</div>
+          <div class="m">
+            <b>#06B6D4</b> (dark UI) · <b>#0E7490</b> (text on light)<br />Means “live”: deploying, streaming,
+            focus ring. <b>7.4:1</b> on navy.
+          </div>
+        </div>
+        <div class="sw">
+          <div class="c" style="background: #f8fafc; color: #0f172a; border-bottom: 1px solid var(--border)">
+            Background · Slate 50
+          </div>
+          <div class="m">
+            <b>#F8FAFC</b> · surface #FFFFFF · border #E2E8F0<br />Body text #334155 (<b>9.9:1</b>), muted
+            #64748B (<b>4.8:1</b>).
+          </div>
+        </div>
+      </div>
+      <div class="status">
+        <div class="st" style="background: #dcfce7; color: #166534">
+          <span>✓ Healthy</span><span class="mono">#16A34A / #22C55E</span>
+        </div>
+        <div class="st" style="background: #ecfeff; color: #0e7490">
+          <span>⟳ Deploying</span><span class="mono">accent cyan</span>
+        </div>
+        <div class="st" style="background: #fef3c7; color: #92400e">
+          <span>▲ Degraded</span><span class="mono">#D97706 / #F59E0B</span>
+        </div>
+        <div class="st" style="background: #fee2e2; color: #991b1b">
+          <span>✕ Down</span><span class="mono">#DC2626 / #F87171</span>
+        </div>
+      </div>
+      <p class="small muted mt1">
+        Status colours are reserved for system state and always paired with an icon + label, so state never
+        depends on colour alone (NFR-07). Each has a light-UI and a brighter dark-UI variant.
+      </p>
+
+      <div class="two mt4">
+        <div>
+          <div class="sec-t">02 · Typography</div>
+          <div class="type-row">
+            <div class="k"><b>Space Grotesk</b>Headings · 600/700</div>
+            <div style="font: 700 34px/1.1 var(--font-head); color: var(--text)">Ship it. Then fix it.</div>
+            <div class="why">Geometric, slightly technical character; distinctive at large sizes.</div>
+          </div>
+          <div class="type-row">
+            <div class="k"><b>Inter</b>Body &amp; UI · 400/500/600</div>
+            <div style="font: 400 16px/1.6 var(--font-body)">
+              Customers with an order of exactly Rs 1,000 are not getting the 10% discount.
+            </div>
+            <div class="why">Designed for screens; very legible at 13–16px in dense dashboards.</div>
+          </div>
+          <div class="type-row">
+            <div class="k"><b>JetBrains Mono</b>Code, terminal, logs, metrics</div>
+            <div style="font: 400 14px var(--font-mono); font-variant-ligatures: none">
+              if (order.total >= 1000) {} // 0O 1lI
+            </div>
+            <div class="why">Clear 0/O and 1/l/I; equal-width digits keep timers and metrics steady.</div>
+          </div>
+          <p class="small muted mt2">
+            Scale: 48 / 32 / 24 / 20 / 16 / 14 / 12 px · line-height 1.6 body, 1.2 headings · max 3 families.
+          </p>
+        </div>
+        <div>
+          <div class="sec-t">03 · Components in the system</div>
+          <div class="row wrap">
+            <span class="btn btn-primary">Primary action</span><span class="btn btn-secondary">Secondary</span
+            ><span class="btn btn-ghost">Ghost</span><span class="btn btn-danger">⟲ Roll back</span>
+          </div>
+          <div class="row wrap mt2">
+            <span class="badge ok">Beginner</span><span class="badge warn">Intermediate</span
+            ><span class="badge bad">Advanced</span><span class="badge primary">🧪 Edge-Case Hunter</span
+            ><span class="badge accent">● Live</span><span class="chip on">All</span
+            ><span class="chip">Rollback</span>
+          </div>
+          <div class="console mt2">
+            <span style="color: #64748b">$ npm test</span><br /><span style="color: #22c55e"
+              >✓ applies discount at exactly Rs 1000</span
+            ><br /><span style="color: #f87171">⚠ ALERT payments-service 5xx 38% · v1.4.2</span><br /><span
+              style="color: #22d3ee"
+              >⟲ rollback v1.4.1</span
+            >
+            <span style="color: #22c55e">✓ restored in 2m 04s</span>
+          </div>
+          <div class="sec-t" style="margin-top: 26px">04 · Design tone</div>
+          <div class="tone">
+            <span
+              style="
+                background: var(--primary-tint);
+                border-color: var(--primary);
+                color: var(--primary-hover);
+              "
+              >Modern</span
+            ><span
+              style="
+                background: var(--primary-tint);
+                border-color: var(--primary);
+                color: var(--primary-hover);
+              "
+              >Technical</span
+            ><span
+              style="
+                background: var(--primary-tint);
+                border-color: var(--primary);
+                color: var(--primary-hover);
+              "
+              >Calm under pressure</span
+            ><span
+              style="
+                background: var(--primary-tint);
+                border-color: var(--primary);
+                color: var(--primary-hover);
+              "
+              >Trustworthy</span
+            ><span class="no">Playful</span><span class="no">Gamer neon</span
+            ><span class="no">Corporate grey</span>
+          </div>
+          <p class="small muted mt2">
+            <b>Light + dark hybrid:</b> public pages and dashboards are light (reading and data); the
+            Workspace is dark like a real IDE / ops console. One navy colour joins both.
+          </p>
+        </div>
+      </div>
+
+      <div class="sec-t mt4">05 · Reference products we studied (what we took from each)</div>
+      <div class="three">
+        <div class="ref">
+          <div
+            class="mini"
+            style="
+              background: #1e1e1e;
+              display: grid;
+              grid-template-columns: 50px 1fr;
+              grid-template-rows: 1fr 30px;
+              gap: 3px;
+              padding: 4px;
+            "
+          >
+            <div style="background: #252526; grid-row: 1/3"></div>
+            <div style="background: #1e1e1e; border: 1px solid #333"></div>
+            <div style="background: #181818; border: 1px solid #333"></div>
+          </div>
+          <h4>VS Code</h4>
+          <p>Explorer / editor / terminal layout every developer knows.</p>
+          <div class="took"><b>Took:</b> workspace zones, tabs, “M” modified marker, dark editor theme.</div>
+        </div>
+        <div class="ref">
+          <div
+            class="mini"
+            style="
+              background: #111217;
+              padding: 8px;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 6px;
+            "
+          >
+            <div style="background: #22252b; border-top: 3px solid #73bf69"></div>
+            <div style="background: #22252b; border-top: 3px solid #f2495c"></div>
+            <div style="background: #22252b; border-top: 3px solid #fade2a"></div>
+          </div>
+          <h4>Grafana / Datadog</h4>
+          <p>Ops dashboards with alerts, sparklines and severity.</p>
+          <div class="took">
+            <b>Took:</b> metric tiles with sparklines, SEV labels, red/amber/green state language.
+          </div>
+        </div>
+        <div class="ref">
+          <div class="mini" style="background: linear-gradient(135deg, #0f172a, #312e81); padding: 14px">
+            <div style="width: 60%; height: 12px; background: #fff; border-radius: 3px"></div>
+            <div
+              style="width: 40%; height: 8px; background: #94a3b8; border-radius: 3px; margin-top: 8px"
+            ></div>
+            <div
+              style="width: 80px; height: 18px; background: #4f46e5; border-radius: 4px; margin-top: 12px"
+            ></div>
+          </div>
+          <h4>Linear / Vercel</h4>
+          <p>Modern developer-tool marketing pages.</p>
+          <div class="took">
+            <b>Took:</b> confident short headline, product visual in the hero, dark CTA band, generous white
+            space.
+          </div>
+        </div>
+        <div class="ref">
+          <div
+            class="mini"
+            style="background: #f6f8fa; padding: 12px; display: flex; gap: 6px; align-items: center"
+          >
+            <span class="badge ok">✓ passed</span><span class="badge bad">✕ failed</span
+            ><span class="badge warn">● queued</span>
+          </div>
+          <h4>GitHub Actions / Primer</h4>
+          <p>CI pipeline stages and status iconography.</p>
+          <div class="took"><b>Took:</b> stage-by-stage pipeline view, icon + label status badges.</div>
+        </div>
+        <div class="ref">
+          <div class="mini" style="background: #fff7ed; display: grid; place-items: center">
+            <div
+              style="
+                width: 70px;
+                height: 70px;
+                border-radius: 50%;
+                border: 10px solid #16a34a;
+                border-right-color: #e2e8f0;
+              "
+            ></div>
+          </div>
+          <h4>LeetCode / Duolingo progress</h4>
+          <p>Score feedback and streak-style motivation.</p>
+          <div class="took">
+            <b>Took:</b> score ring, badges, personal-best tracking (used sparingly to stay professional).
+          </div>
+        </div>
+        <div class="ref">
+          <div class="mini" style="background: #0b1120; padding: 10px">
+            <svg viewBox="0 0 200 72" width="100%" height="72">
+              <g fill="#166534" stroke="#22C55E">
+                <polygon points="30,20 55,12 80,20 55,28" />
+                <polygon points="110,40 135,32 160,40 135,48" />
+              </g>
+              <g fill="#991B1B" stroke="#F87171"><polygon points="70,52 95,44 120,52 95,60" /></g>
+              <path d="M55 24 L135 44 M55 24 L95 56" stroke="#334155" />
+            </svg>
+          </div>
+          <h4>AWS / cloud architecture diagrams</h4>
+          <p>Isometric service maps used in system-design talks.</p>
+          <div class="took"><b>Took:</b> 2.5D node map for the live System Map, with a flat 2D fallback.</div>
+        </div>
+      </div>
+      <p class="xsmall muted mt2">
+        Thumbnails are simplified sketches drawn by the team to describe each reference; no third-party assets
+        are used in the design.
+      </p>
+    </section>
+
+    <section class="sheet" id="flow">
+      <h1 style="font-size: 28px">Prodlike: Prototype Navigation Flow</h1>
+      <p class="sub">
+        Every box is a clickable page in the prototype. Solid arrows = main path; dashed = secondary links /
+        modals.
+      </p>
+      <div class="flow">
+        <span class="lane" style="left: 0; top: 0">Public</span>
+        <span class="lane" style="left: 0; top: 190px">Learner</span>
+        <span class="lane" style="left: 0; top: 400px">Instructor</span>
+        <svg viewBox="0 0 1420 560" width="1420" height="560">
+          <defs>
+            <marker
+              id="ah"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto"
+            >
+              <path d="M0 0L10 5L0 10z" fill="#0F172A" />
+            </marker>
+            <marker
+              id="ah2"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto"
+            >
+              <path d="M0 0L10 5L0 10z" fill="#64748B" />
+            </marker>
+          </defs>
+          <g stroke="#0F172A" stroke-width="2.2" fill="none" marker-end="url(#ah)">
+            <path d="M200 60 H300" />
+            <!-- landing -> signup -->
+            <path d="M100 92 V150 H915 V200" />
+            <!-- landing -> demo brief -->
+            <path d="M395 92 V200" />
+            <!-- signup -> dashboard -->
+            <path d="M490 240 H560" />
+            <!-- dashboard -> catalogue -->
+            <path d="M750 240 H820" />
+            <!-- catalogue -> brief -->
+            <path d="M1010 240 H1080" />
+            <!-- brief -> workspace -->
+            <path d="M1175 290 V340" />
+            <!-- workspace -> debrief -->
+            <path d="M1175 200 V172" stroke-dasharray="5 5" />
+          </g>
+          <g stroke="#64748B" stroke-width="2" fill="none" stroke-dasharray="6 6" marker-end="url(#ah2)">
+            <path d="M300 75 H250 V450 H300" />
+            <!-- signup (instructor) -> instructor -->
+            <path d="M1080 380 H760 V280" />
+            <!-- debrief -> retry/next -->
+            <path d="M490 450 H560" />
+            <!-- instructor -> modals -->
+            <path d="M395 410 V280" />
+            <!-- instructor <-> learner view -->
+            <path d="M395 482 V530 H1175 V420" />
+            <!-- instructor -> learner debrief -->
+          </g>
+          <g font-family="Inter,sans-serif" font-size="11.5" fill="#64748B">
+            <text x="212" y="52">Sign up / Log in</text>
+            <text x="560" y="142">▶ Try demo (guest, no account)</text>
+            <text x="404" y="182">role = learner</text>
+            <text x="150" y="300">role =</text>
+            <text x="150" y="315">instructor</text>
+            <text x="500" y="232">Browse</text>
+            <text x="760" y="232">Card</text>
+            <text x="1018" y="232">Start</text>
+            <text x="1185" y="318">Finish attempt</text>
+            <text x="830" y="372">Retry / Next scenario</text>
+            <text x="700" y="522">Debrief link per learner</text>
+          </g>
+        </svg>
+        <div class="fn pub" style="left: 10px; top: 28px">Landing<small>index.html</small></div>
+        <div class="fn pub" style="left: 300px; top: 28px">
+          Sign up / Log in<small>login.html · role toggle</small>
+        </div>
+        <div class="fn" style="left: 300px; top: 200px">Learner Dashboard<small>dashboard.html</small></div>
+        <div class="fn" style="left: 560px; top: 200px">
+          Scenario Catalogue<small>filters + search</small>
+        </div>
+        <div class="fn" style="left: 820px; top: 200px">
+          Scenario Brief<small>brief.html (?guest=1)</small>
+        </div>
+        <div class="fn dark" style="left: 1080px; top: 200px">
+          Scenario Workspace<small>tests · deploy · incident · rollback</small>
+        </div>
+        <div class="fn" style="left: 1080px; top: 340px">Debrief &amp; Score<small>debrief.html</small></div>
+        <div class="fn ins" style="left: 300px; top: 410px">
+          Instructor Dashboard<small>instructor.html</small>
+        </div>
+        <div class="fn modal" style="left: 560px; top: 410px">
+          Modals<small>New cohort · Assign · Export CSV</small>
+        </div>
+        <div class="fn modal" style="left: 1080px; top: 110px; width: 190px">
+          Workspace modals<small>Deploy strategy · Hints (−5)</small>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

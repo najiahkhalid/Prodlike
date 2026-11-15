@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard — Prodlike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      .resume {
+        background: linear-gradient(120deg, var(--secondary), #1e1b4b);
+        color: #cbd5e1;
+        border: 0;
+      }
+      .resume h3 {
+        color: #fff;
+      }
+      .skill {
+        display: grid;
+        grid-template-columns: 140px 1fr 44px;
+        gap: 12px;
+        align-items: center;
+        font-size: 14px;
+        margin: 10px 0;
+      }
+      .trend {
+        width: 100%;
+        height: 140px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="sidebar" id="sidebar" aria-label="Learner navigation"></nav>
+      <main class="main">
+        <div class="page-head">
+          <div>
+            <div class="crumbs">Learner</div>
+            <h1>Good evening, Ali</h1>
+          </div>
+          <a class="btn btn-primary" href="catalogue.html">Browse scenarios</a>
+        </div>
+
+        <div class="card resume">
+          <div class="row between wrap">
+            <div>
+              <span class="badge accent">In progress · autosaved 30s ago</span>
+              <h3 class="mt2">The Rs 1,000 Discount Bug</h3>
+              <p class="mb0 small">ByteBite Food Delivery · Step 3 of 5: Ship · Attempt 2</p>
+            </div>
+            <a class="btn btn-primary btn-lg" href="workspace.html">Resume attempt →</a>
+          </div>
+        </div>
+
+        <div class="grid g4 mt3">
+          <div class="card stat">
+            <div class="label">Scenarios completed</div>
+            <div class="value">7</div>
+            <div class="delta up">▲ 2 this week</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Average score</div>
+            <div class="value">78%</div>
+            <div class="delta up">▲ 26% since first attempt</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Median time to recover</div>
+            <div class="value">3m 40s</div>
+            <div class="delta up">▼ 1m 10s faster</div>
+          </div>
+          <div class="card stat">
+            <div class="label">Badges</div>
+            <div class="value">4</div>
+            <div class="small muted">Latest: Clean Rollback</div>
+          </div>
+        </div>
+
+        <div class="grid mt3" style="grid-template-columns: 1.4fr 1fr">
+          <div class="card">
+            <div class="row between">
+              <h3 class="mb0">Score history</h3>
+              <span class="small muted">Last 7 attempts</span>
+            </div>
+            <svg
+              class="trend mt2"
+              viewBox="0 0 600 140"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Score rising from 52% to 86% over 7 attempts"
+            >
+              <g stroke="#E2E8F0"><path d="M0 20H600M0 70H600M0 120H600" /></g>
+              <path
+                d="M10 112 L105 98 L200 90 L295 70 L390 64 L485 44 L590 30 L590 140 L10 140Z"
+                fill="rgba(79,70,229,.08)"
+              />
+              <path
+                d="M10 112 L105 98 L200 90 L295 70 L390 64 L485 44 L590 30"
+                fill="none"
+                stroke="#4F46E5"
+                stroke-width="3"
+              />
+              <g fill="#4F46E5">
+                <circle cx="10" cy="112" r="4" />
+                <circle cx="105" cy="98" r="4" />
+                <circle cx="200" cy="90" r="4" />
+                <circle cx="295" cy="70" r="4" />
+                <circle cx="390" cy="64" r="4" />
+                <circle cx="485" cy="44" r="4" />
+                <circle cx="590" cy="30" r="5" />
+              </g>
+            </svg>
+            <div class="row between xsmall muted"><span>52%</span><span>86%</span></div>
+          </div>
+          <div class="card">
+            <h3>Skills</h3>
+            <div class="skill">
+              <span>Correctness</span>
+              <div class="bar"><i style="width: 86%"></i></div>
+              <b>86</b>
+            </div>
+            <div class="skill">
+              <span>Testing</span>
+              <div class="bar"><i style="width: 64%"></i></div>
+              <b>64</b>
+            </div>
+            <div class="skill">
+              <span>Deployment safety</span>
+              <div class="bar"><i style="width: 72%"></i></div>
+              <b>72</b>
+            </div>
+            <div class="skill">
+              <span>Recovery</span>
+              <div class="bar"><i style="width: 81%"></i></div>
+              <b>81</b>
+            </div>
+            <p class="small muted mt2 mb0">
+              Weakest skill: <b>Testing</b>. Try <a href="catalogue.html">Add Appointment Reminders</a>.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid g2 mt3">
+          <div class="card">
+            <h3>Assigned to you</h3>
+            <table class="t">
+              <tr>
+                <th>Scenario</th>
+                <th>Cohort</th>
+                <th>Due</th>
+                <th></th>
+              </tr>
+              <tr>
+                <td>Friday Deploy Gone Wrong</td>
+                <td>BSCS-12 Lab 6</td>
+                <td><span class="badge warn">⏱ in 2 days</span></td>
+                <td><a href="brief.html">Open</a></td>
+              </tr>
+              <tr>
+                <td>The Missing Env Variable</td>
+                <td>BSCS-12 Lab 7</td>
+                <td><span class="badge">Nov 29</span></td>
+                <td><a href="brief.html">Open</a></td>
+              </tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recent debriefs</h3>
+            <table class="t">
+              <tr>
+                <th>Scenario</th>
+                <th>Score</th>
+                <th>Recovered in</th>
+                <th></th>
+              </tr>
+              <tr>
+                <td>Rs 1,000 Discount Bug</td>
+                <td><span class="badge ok">86%</span></td>
+                <td class="mono">2m 04s</td>
+                <td><a href="debrief.html">View</a></td>
+              </tr>
+              <tr>
+                <td>Add Appointment Reminders</td>
+                <td><span class="badge warn">64%</span></td>
+                <td class="mono">—</td>
+                <td><a href="debrief.html">View</a></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="assets/app.js"></script>
+    <script>
+      renderSidebar('Dashboard', 'learner');
+      if (new URLSearchParams(location.search).get('welcome'))
+        toast('Account created. Welcome to Prodlike! Take the 60-second tour or jump into a scenario.', 'ok');
+    </script>
+  </body>
+</html>

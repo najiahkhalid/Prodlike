@@ -11,6 +11,7 @@ const RULES: { prefix: string; roles: Role[] | 'any' }[] = [
   { prefix: '/instructor', roles: ['INSTRUCTOR', 'ADMIN'] },
   { prefix: '/dashboard', roles: 'any' },
   { prefix: '/scenarios', roles: 'any' },
+  { prefix: '/attempts', roles: 'any' },
   { prefix: '/progress', roles: 'any' },
   { prefix: '/settings', roles: 'any' },
 ];
@@ -65,6 +66,7 @@ export const config = {
     '/instructor/:path*',
     '/dashboard/:path*',
     '/scenarios/:path*',
+    '/attempts/:path*',
     '/progress/:path*',
     '/settings/:path*',
   ],
