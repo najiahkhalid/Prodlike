@@ -4,3 +4,4 @@ export * from './events';
 export * from './api';
 export * from './auth';
 export * from './catalogue';
+export * from './attempts';

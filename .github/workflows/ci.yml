@@ -33,6 +33,8 @@ jobs:
       DATABASE_URL_TEST: postgresql://prodlike:prodlike@localhost:5432/prodlike?schema=public
       # Browser tests use their own database
       E2E_DATABASE_URL: postgresql://prodlike:prodlike@localhost:5432/prodlike_e2e?schema=public
+      # Run the Docker-backed sandbox tests (API integration + Playwright workspace tests)
+      SANDBOX_TESTS: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -41,6 +43,8 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build sandbox images (needed by the sandbox tests)
+        run: node infra/scripts/build-scenarios.mjs
       - run: pnpm format:check
       - run: pnpm db:generate
       - name: Apply migrations to a real Postgres

@@ -40,9 +40,10 @@ services:
       SCENARIOS_DIR: /repo/scenarios
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@prodlike.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
-    # Phase 2 (sandbox runner): the API starts scenario containers through the Docker socket.
-    # volumes:
-    #   - /var/run/docker.sock:/var/run/docker.sock
+    # The API starts one sandbox container per attempt through the host's Docker (ADR-005).
+    # Build the images first on the host: pnpm scenarios:build
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   web:
     build:

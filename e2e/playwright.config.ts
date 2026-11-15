@@ -40,6 +40,9 @@ export default defineConfig({
         COOKIE_SECURE: 'false',
         AUTH_RATE_LIMIT: '1000',
         SCENARIOS_AUTO_PUBLISH: 'true',
+        SANDBOX_POOL_SIZE: '1',
+        // Headroom so attempts left open by an interrupted local run cannot block the suite.
+        SANDBOX_MAX_ACTIVE: '30',
       },
     },
     {

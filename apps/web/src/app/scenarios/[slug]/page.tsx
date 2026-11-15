@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Badge, Button, Card, difficultyTone } from '@prodlike/ui';
+import { Badge, Card, difficultyTone } from '@prodlike/ui';
 import type { ScenarioBrief } from '@prodlike/shared';
 import { AppShell } from '@/components/AppShell';
+import { StartAttemptButton } from '@/components/StartAttemptButton';
 import { requireMe, serverApi } from '@/lib/api';
 
 const SKILL_LABEL = {
@@ -121,12 +122,7 @@ export default async function BriefPage({ params }: { params: Promise<{ slug: st
               Any valid solution that passes the checks gets full marks. {s.hintCount} hints available, −
               {s.hintPenalty} points each.
             </p>
-            <Button size="lg" className="mt-4 w-full" disabled aria-describedby="start-note">
-              ▶ Start attempt
-            </Button>
-            <p id="start-note" className="mt-2 text-center text-xs text-ink-muted">
-              The sandbox workspace opens in the next release (Phase 2).
-            </p>
+            <StartAttemptButton slug={s.slug} />
           </Card>
         </aside>
       </div>

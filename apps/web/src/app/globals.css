@@ -43,6 +43,11 @@
   .field-error {
     @apply mt-1 text-[13px] font-medium text-bad-text;
   }
+  /* Dark workspace buttons (A2 prototype .wbtn) */
+  .ws-btn {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-console-line bg-console-raised px-3 py-2 text-[13px] font-semibold text-console-text;
+    @apply hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-40;
+  }
   .eyebrow {
     @apply text-xs font-semibold uppercase tracking-widest text-accent-text;
   }

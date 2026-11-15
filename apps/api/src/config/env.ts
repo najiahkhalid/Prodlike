@@ -32,6 +32,15 @@ const EnvSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+
+  /** Sandboxes (ADR-005). Image name = prefix + scenario slug + ":latest". */
+  SANDBOX_IMAGE_PREFIX: z.string().default('prodlike/scenario-'),
+  /** Warm containers kept ready per scenario (NFR-02: ready within 10 s). 0 disables the pool. */
+  SANDBOX_POOL_SIZE: z.coerce.number().int().min(0).max(10).default(2),
+  /** Maximum attempts with a running sandbox at once (NFR-04: 20 on a server, ~8 on a laptop). */
+  SANDBOX_MAX_ACTIVE: z.coerce.number().int().positive().default(8),
+  /** Attempts idle longer than this are abandoned and their sandbox removed (FR-05). */
+  SANDBOX_IDLE_MINUTES: z.coerce.number().positive().default(60),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

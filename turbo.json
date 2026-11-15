@@ -1,6 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["DATABASE_URL", "DATABASE_URL_TEST", "E2E_DATABASE_URL", "CI", "PW_CHANNEL"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "DATABASE_URL_TEST",
+    "E2E_DATABASE_URL",
+    "CI",
+    "PW_CHANNEL",
+    "SANDBOX_TESTS"
+  ],
   "tasks": {
     "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },
     "dev": { "cache": false, "persistent": true },

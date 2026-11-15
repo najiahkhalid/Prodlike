@@ -13,7 +13,7 @@ Prodlike is a CS344 Web Engineering (NUST SEECS) group project by Team Prodlike:
 
 - [x] P0 Foundation (monorepo, CI, design tokens, data model, discount-bug scenario)
 - [x] P1 Accounts, roles, password reset, onboarding tour, catalogue, brief, admin publish (FR-01..04, FR-20 part)
-- [ ] P2 Sandbox runner + workspace (FR-05..07): dockerode, warm pool, allowlisted exec, Monaco, xterm.js
+- [x] P2 Sandbox runner + workspace (FR-05..07): dockerode warm pool, allowlisted exec, CodeMirror editor, HTTP terminal, snapshot resume (ADR-006)
 - [ ] P3 Engine: pipeline, deploy, incidents, 3D/2D map, metrics (FR-08..12)
 - [ ] P4 Scoring, debrief, progress, hints, guest demo (FR-13..16)
 - [ ] P5 Instructor cohorts/assignments/reports/CSV, admin, scenario builder (FR-17..20)
@@ -32,5 +32,5 @@ Prodlike is a CS344 Web Engineering (NUST SEECS) group project by Team Prodlike:
 ## Commands
 
 - `pnpm dev` · `pnpm build` · `pnpm lint` · `pnpm typecheck` · `pnpm format` · `pnpm scenarios:validate`
-- API integration tests: `DATABASE_URL_TEST=... pnpm test`. Browser tests: `pnpm build && PW_CHANNEL=chrome pnpm --filter @prodlike/e2e e2e`. Database setup is in the README.
+- API integration tests: `DATABASE_URL_TEST=... pnpm test` (add `SANDBOX_TESTS=1` for the real-Docker sandbox tests, after `pnpm scenarios:build`). Browser tests: `pnpm build && PW_CHANNEL=chrome pnpm --filter @prodlike/e2e e2e`. Database setup is in the README.
 - Windows quirks: Next standalone output is only enabled inside Docker (symlinks). VS Code forwards 127.0.0.1:3000, so the e2e tests use ports 3100/4100.
