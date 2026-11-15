@@ -55,6 +55,8 @@ services:
     environment:
       API_INTERNAL_URL: http://api:4000
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET in .env}
+      # Empty = live events go through Caddy on the same origin (/api/socket.io), ADR-007
+      REALTIME_PORT: ''
 
   caddy:
     image: caddy:2-alpine

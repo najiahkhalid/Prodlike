@@ -3,10 +3,20 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AttemptView, CommandResult, TestRunResult, WorkspaceFile } from '@prodlike/shared';
+import type {
+  AttemptView,
+  CommandResult,
+  DeployInput,
+  EngineSnapshot,
+  TestRunResult,
+  WorkspaceFile,
+} from '@prodlike/shared';
 import { ClientApiError, clientApi } from '@/lib/client-api';
 import { CodeEditor } from './CodeEditor';
 import { Explorer, TerminalPanel, TestsPanel, type TerminalLine } from './panels';
+import { DeployDialog } from './system/DeployDialog';
+import { SystemPanel } from './system/SystemPanel';
+import { useEngine, type RealtimeConfig } from './useEngine';
 
 type SaveState = 'saved' | 'saving' | 'unsaved' | 'error';
 const STEPS = ['Understand', 'Change', 'Test', 'Ship', 'Recover'] as const;
@@ -24,9 +34,16 @@ function useElapsed(startedAt: string) {
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-/** The Scenario Workspace (WF-04): Code · Terminal/Tests · System. FR-05..07. */
-export function Workspace({ initial }: { initial: AttemptView }) {
+/** The Scenario Workspace (WF-04): Code · Terminal/Tests · System. FR-05..12. */
+export function Workspace({ initial, realtime }: { initial: AttemptView; realtime: RealtimeConfig }) {
   const router = useRouter();
+  const { engine, setEngine, history, pipelineLog, connected } = useEngine(
+    initial.id,
+    initial.engine,
+    realtime,
+  );
+  const [deployOpen, setDeployOpen] = useState(false);
+  const [engineBusy, setEngineBusy] = useState(false);
   const [view, setView] = useState(initial);
   const [open, setOpen] = useState(initial.scenario.entryFile);
   const [contents, setContents] = useState<Record<string, string>>({});
@@ -148,6 +165,44 @@ export function Workspace({ initial }: { initial: AttemptView }) {
     }
   }
 
+  async function deploy(input: DeployInput) {
+    await flush();
+    try {
+      const snap = await clientApi<EngineSnapshot>(`/attempts/${view.id}/deploy`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      });
+      setEngine(snap);
+      setLines((l) => [
+        ...l,
+        {
+          kind: 'system',
+          text: `▶ Pipeline #${snap.pipeline?.number} started for ${snap.pipeline?.release} (${input.strategy})`,
+        },
+      ]);
+    } catch (e) {
+      throw new Error(fail(e));
+    }
+  }
+
+  async function rollback() {
+    setEngineBusy(true);
+    setBottom('terminal');
+    await runCommand('rollback');
+    setEngineBusy(false);
+  }
+
+  async function finish() {
+    await flush();
+    try {
+      await clientApi(`/attempts/${view.id}/finish`, { method: 'POST' });
+      router.refresh();
+    } catch (e) {
+      setLines((l) => [...l, { kind: 'system', text: fail(e) }]);
+      setBottom('terminal');
+    }
+  }
+
   async function endAttempt() {
     if (
       !confirm(
@@ -160,7 +215,13 @@ export function Workspace({ initial }: { initial: AttemptView }) {
     router.push(`/scenarios/${view.scenario.slug}`);
   }
 
-  const stepDone = [true, view.progress.changed, view.progress.testsPassed, false, false];
+  const deployed =
+    view.progress.deployed || ['DEPLOYED', 'INCIDENT_ACTIVE', 'RECOVERED'].includes(engine.state);
+  const recovered = view.progress.recovered || engine.state === 'RECOVERED';
+  // A successful deploy ran the test stage, so it counts as tests passed too.
+  const stepDone = [true, view.progress.changed, view.progress.testsPassed || deployed, deployed, recovered];
+  const pipelineRunning = engine.state === 'PIPELINE_RUNNING' || engine.state === 'RECOVERING';
+  const incidentOpen = engine.state === 'INCIDENT_ACTIVE';
   const current = stepDone.indexOf(false);
 
   return (
@@ -220,14 +281,21 @@ export function Workspace({ initial }: { initial: AttemptView }) {
         <button type="button" disabled title="Hints arrive in Phase 4" className="ws-btn">
           💡 Hint
         </button>
-        <button
-          type="button"
-          disabled
-          title="The CI/CD pipeline arrives in Phase 3"
-          className="ws-btn bg-primary text-white"
-        >
-          ⇪ Commit &amp; Deploy
-        </button>
+        {engine.canFinish ? (
+          <button type="button" onClick={finish} className="ws-btn border-green-700 bg-green-700 text-white">
+            ✓ Finish attempt
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setDeployOpen(true)}
+            disabled={pipelineRunning || engineBusy}
+            title={pipelineRunning ? 'A pipeline or rollback is running' : undefined}
+            className="ws-btn border-primary bg-primary text-white"
+          >
+            {pipelineRunning ? '⟳ Pipeline running…' : incidentOpen ? '⇪ Ship hotfix' : '⇪ Commit & Deploy'}
+          </button>
+        )}
         <button type="button" onClick={endAttempt} className="ws-btn">
           End attempt
         </button>
@@ -284,25 +352,23 @@ export function Workspace({ initial }: { initial: AttemptView }) {
         </div>
       </section>
 
-      {/* ------------------------------------------------ system (Phase 3) */}
+      {/* ------------------------------------------------ system */}
       <aside
         aria-label="System"
         className="row-span-2 flex min-h-0 flex-col border-l border-console-raised bg-console-panel max-lg:col-span-full max-lg:row-span-1"
       >
-        <div className="flex h-[38px] items-center gap-4 border-b border-console-raised px-3 text-[13px]">
-          <span className="border-b-2 border-accent-live py-2.5 text-white">System Map</span>
-          <span className="text-console-muted">Pipeline</span>
-          <span className="text-console-muted">Incidents</span>
-        </div>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-          <span className="rounded-full bg-ok-dark/15 px-3 py-1 text-xs font-semibold text-ok-dark">
-            ✓ production · healthy
-          </span>
-          <p className="max-w-[260px] text-console-muted">
-            The live system map, CI/CD pipeline and incident console connect here in Phase 3, once you can
-            deploy.
-          </p>
-        </div>
+        <SystemPanel
+          engine={engine}
+          history={history}
+          pipelineLog={pipelineLog}
+          connected={connected}
+          busy={engineBusy || pipelineRunning}
+          onRollback={() => void rollback()}
+          onLogs={(service) => {
+            setBottom('terminal');
+            void runCommand(`logs ${service}`);
+          }}
+        />
       </aside>
 
       {/* ------------------------------------------------ terminal / tests */}
@@ -343,6 +409,14 @@ export function Workspace({ initial }: { initial: AttemptView }) {
           )}
         </div>
       </section>
+
+      <DeployDialog
+        open={deployOpen}
+        hotfix={incidentOpen}
+        canaryPercent={engine.canaryPercent}
+        onClose={() => setDeployOpen(false)}
+        onDeploy={deploy}
+      />
     </div>
   );
 }

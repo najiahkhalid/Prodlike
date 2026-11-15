@@ -19,18 +19,23 @@
     "@lezer/highlight": "1.2.1",
     "@prodlike/shared": "workspace:*",
     "@prodlike/ui": "workspace:*",
+    "@react-three/drei": "10.0.4",
+    "@react-three/fiber": "9.0.4",
     "@uiw/codemirror-themes": "4.23.7",
     "@uiw/react-codemirror": "4.23.7",
     "jose": "5.9.6",
     "next": "15.1.6",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "socket.io-client": "4.8.1",
+    "three": "0.172.0"
   },
   "devDependencies": {
     "@types/node": "22.10.2",
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
+    "@types/three": "0.172.0",
     "autoprefixer": "10.4.20",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.17"

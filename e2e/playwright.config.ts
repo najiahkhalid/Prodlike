@@ -43,6 +43,8 @@ export default defineConfig({
         SANDBOX_POOL_SIZE: '1',
         // Headroom so attempts left open by an interrupted local run cannot block the suite.
         SANDBOX_MAX_ACTIVE: '30',
+        // Faster engine clock: deploys and incidents in half the time.
+        ENGINE_TIME_SCALE: '0.5',
       },
     },
     {
@@ -50,7 +52,7 @@ export default defineConfig({
       cwd: '../apps/web',
       url: 'http://localhost:3100',
       reuseExistingServer: !CI,
-      env: { API_INTERNAL_URL: 'http://localhost:4100', JWT_ACCESS_SECRET: SECRET },
+      env: { API_INTERNAL_URL: 'http://localhost:4100', JWT_ACCESS_SECRET: SECRET, REALTIME_PORT: '4100' },
     },
   ],
 });

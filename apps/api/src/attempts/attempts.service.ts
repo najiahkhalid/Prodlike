@@ -5,6 +5,8 @@ import type {
   AccessTokenClaims,
   AttemptView,
   CommandResult,
+  DeployInput,
+  EngineSnapshot,
   Scenario,
   TestRunResult,
   WorkspaceFile,
@@ -13,6 +15,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ApiException, Errors } from '../common/api-exception';
 import type { Env } from '../config/env';
+import { EngineService } from '../engine/engine.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { decideCommand } from '../sandbox/command-policy';
 import { safeWorkspacePath } from '../sandbox/path-policy';
@@ -63,6 +66,7 @@ export class AttemptsService {
     private readonly sandbox: SandboxService,
     private readonly registry: ScenarioRegistry,
     private readonly config: ConfigService<Env, true>,
+    private readonly engine: EngineService,
   ) {}
 
   // ---------------------------------------------------------------- lifecycle
@@ -151,11 +155,13 @@ export class AttemptsService {
     const ready = await this.ensureSandbox(attempt);
     await this.sandbox.writeFile(ready.containerId!, path, content);
 
-    const snapshot = this.snapshotOf(ready);
-    snapshot.files[path] = content;
+    // Merge into the stored snapshot: it also holds the engine state, which must survive.
+    const fresh = await this.prisma.attempt.findUniqueOrThrow({ where: { id }, select: { snapshot: true } });
+    const stored = (fresh.snapshot ?? {}) as { files?: Record<string, string> };
+    const merged = { ...stored, files: { ...(stored.files ?? {}), [path]: content } };
     await this.prisma.attempt.update({
       where: { id },
-      data: { snapshot: snapshot as unknown as Prisma.InputJsonValue, lastActivityAt: new Date() },
+      data: { snapshot: merged as unknown as Prisma.InputJsonValue, lastActivityAt: new Date() },
     });
 
     const key = `${id}:${path}`;
@@ -183,15 +189,13 @@ export class AttemptsService {
       return this.result(line, false, null, `${decision.reason}\nAllowed commands: ${allowed}\n`, 0);
     }
     if (decision.kind === 'engine') {
-      await this.event(id, 'terminal.engine', { line });
-      return this.result(
-        line,
-        true,
-        0,
-        `"${decision.name}" works on production, which you have not deployed to yet.\n` +
-          'Ship your change with Commit & Deploy first (arrives with the pipeline in the next release).\n',
-        0,
-      );
+      const started = Date.now();
+      const output =
+        decision.name === 'rollback'
+          ? (await this.engine.rollback(attempt, def)).output
+          : await this.engine.logs(attempt, def, decision.args);
+      await this.touch(id);
+      return this.result(line, true, 0, output, Date.now() - started);
     }
 
     const ready = await this.ensureSandbox(attempt);
@@ -243,6 +247,37 @@ export class AttemptsService {
     if (parsed.failed === 0 && parsed.total > 0)
       await this.event(id, 'tests.passed', { total: parsed.total });
     return { ...parsed, durationMs: run.durationMs, output: run.output };
+  }
+
+  // ---------------------------------------------------------------- engine (Phase 3)
+
+  /** FR-08/09: commit, run the CI/CD pipeline and deploy. Progress streams over the socket. */
+  async deploy(user: AccessTokenClaims, id: string, input: DeployInput): Promise<EngineSnapshot> {
+    const attempt = await this.active(user, id);
+    const def = await this.defOf(attempt);
+    const ready = await this.ensureSandbox(attempt);
+    return this.engine.deploy(ready, def, ready.containerId!, input);
+  }
+
+  /** FR-11: roll production back (same as the `rollback` terminal command). */
+  async rollback(user: AccessTokenClaims, id: string): Promise<{ output: string; snapshot: EngineSnapshot }> {
+    const attempt = await this.active(user, id);
+    return this.engine.rollback(attempt, await this.defOf(attempt));
+  }
+
+  /** Finish once production is healthy again; frees the sandbox. Scoring arrives in Phase 4. */
+  async finish(user: AccessTokenClaims, id: string): Promise<EngineSnapshot> {
+    const attempt = await this.active(user, id);
+    const snapshot = await this.engine.finish(attempt, await this.defOf(attempt));
+    await this.sandbox.destroy(attempt.containerId);
+    await this.prisma.attempt.update({ where: { id }, data: { containerId: null } });
+    return snapshot;
+  }
+
+  /** Used by the socket gateway when a browser joins an attempt's live channel. */
+  async liveSnapshot(user: AccessTokenClaims, id: string): Promise<EngineSnapshot> {
+    const attempt = await this.owned(user, id);
+    return this.engine.snapshot(attempt, await this.defOf(attempt));
   }
 
   // ---------------------------------------------------------------- sandbox management
@@ -298,6 +333,7 @@ export class AttemptsService {
   }
 
   async abandon(attempt: Attempt, reason: string) {
+    this.engine.dispose(attempt.id);
     await this.sandbox.destroy(attempt.containerId);
     await this.prisma.attempt.update({
       where: { id: attempt.id },
@@ -316,7 +352,12 @@ export class AttemptsService {
     const paths = files ?? (attempt.containerId ? await this.sandbox.listFiles(attempt.containerId) : []);
     const snapshot = this.snapshotOf(attempt);
     const events = await this.prisma.attemptEvent.findMany({
-      where: { attemptId: attempt.id, type: { in: ['file.saved', 'tests.passed', 'sandbox.ready'] } },
+      where: {
+        attemptId: attempt.id,
+        type: {
+          in: ['file.saved', 'tests.passed', 'sandbox.ready', 'deploy.succeeded', 'incident.resolved'],
+        },
+      },
       select: { type: true, payload: true },
       orderBy: { at: 'desc' },
     });
@@ -342,7 +383,10 @@ export class AttemptsService {
       progress: {
         changed: events.some((e) => e.type === 'file.saved'),
         testsPassed: events.some((e) => e.type === 'tests.passed'),
+        deployed: events.some((e) => e.type === 'deploy.succeeded'),
+        recovered: events.some((e) => e.type === 'incident.resolved'),
       },
+      engine: await this.engine.snapshot(attempt, def),
       ...((attempt.provisionedInMs ?? lastReady?.ms) !== undefined
         ? { provisionedInMs: attempt.provisionedInMs ?? lastReady?.ms }
         : {}),
@@ -369,22 +413,20 @@ export class AttemptsService {
     return attempt;
   }
 
-  /** scenarioVersionId -> slug (versions are immutable, so this never goes stale). */
-  private readonly slugByVersion = new Map<string, string>();
+  /** scenarioVersionId -> definition (versions are immutable, so this never goes stale). */
+  private readonly defByVersion = new Map<string, Scenario>();
 
-  /** The scenario definition an attempt runs. Phase 2 uses the latest definition of that scenario. */
+  /**
+   * The scenario definition an attempt runs, pinned to the version it started on: editing a
+   * scenario never changes the rules of an attempt already in progress.
+   */
   private async defOf(attempt: Attempt): Promise<Scenario> {
-    let slug = this.slugByVersion.get(attempt.scenarioVersionId);
-    if (!slug) {
-      const v = await this.prisma.scenarioVersion.findUnique({
-        where: { id: attempt.scenarioVersionId },
-        include: { scenario: true },
-      });
-      slug = v?.scenario.slug;
-      if (slug) this.slugByVersion.set(attempt.scenarioVersionId, slug);
-    }
-    const def = slug ? this.registry.get(slug) : undefined;
-    if (!def) throw Errors.notFound('This scenario');
+    const cached = this.defByVersion.get(attempt.scenarioVersionId);
+    if (cached) return cached;
+    const v = await this.prisma.scenarioVersion.findUnique({ where: { id: attempt.scenarioVersionId } });
+    if (!v) throw Errors.notFound('This scenario');
+    const def = v.definition as unknown as Scenario;
+    this.defByVersion.set(attempt.scenarioVersionId, def);
     return def;
   }
 

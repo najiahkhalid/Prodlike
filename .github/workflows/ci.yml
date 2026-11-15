@@ -125,5 +125,9 @@ jobs:
           grep -q 'pl_at' /tmp/jar
           curl -skf -b /tmp/jar https://localhost/api/auth/me | grep -q '"email":"ci@stack.test"'
           echo "Registered and authenticated through Caddy"
+      - name: Live channel (Socket.IO) reachable through Caddy
+        run: |
+          curl -skf "https://localhost/api/socket.io/?EIO=4&transport=polling" | grep -q '"sid"'
+          echo "Socket.IO handshake OK through Caddy"
       - if: failure()
         run: docker compose -f infra/docker-compose.yml logs --tail 100
