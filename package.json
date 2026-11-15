@@ -1,0 +1,30 @@
+{
+  "name": "prodlike",
+  "private": true,
+  "description": "Prodlike: a practical software engineering training simulator (CS344 Web Engineering, NUST SEECS)",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @prodlike/api prisma:generate",
+    "db:migrate": "pnpm --filter @prodlike/api prisma:migrate",
+    "scenarios:validate": "pnpm --filter @prodlike/shared validate:scenarios",
+    "scenarios:build": "node infra/scripts/build-scenarios.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.17.0",
+    "eslint": "9.17.0",
+    "prettier": "3.4.2",
+    "turbo": "2.3.3",
+    "typescript": "5.6.3",
+    "typescript-eslint": "8.18.1"
+  }
+}

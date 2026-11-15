@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface-bg font-body text-ink-body antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-head tracking-tight text-ink;
+  }
+  /* Keyboard focus is always visible (NFR-07). */
+  :focus-visible {
+    @apply rounded outline outline-[3px] outline-offset-2 outline-accent;
+  }
+  code,
+  pre {
+    font-variant-ligatures: none; /* ">=" must read literally in code */
+  }
+}

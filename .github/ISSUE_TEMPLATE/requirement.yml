@@ -1,0 +1,40 @@
+name: Requirement slice
+description: A piece of work that delivers part of an SRS requirement
+labels: [requirement]
+body:
+  - type: input
+    id: req
+    attributes:
+      label: Requirement ID
+      placeholder: FR-03, NFR-07
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        [
+          P0 Foundation,
+          P1 Accounts & catalogue,
+          P2 Sandbox & workspace,
+          P3 Engine & map,
+          P4 Scoring & debrief,
+          P5 Instructor & admin,
+          P6 Hardening & pilot,
+        ]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What to build
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when (acceptance criteria)
+      placeholder: '- [ ] ...'
+    validations:
+      required: true

@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: prodlike
+          POSTGRES_PASSWORD: prodlike
+          POSTGRES_DB: prodlike
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U prodlike" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://prodlike:prodlike@localhost:5432/prodlike?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm db:generate
+      - name: Apply migrations to a real Postgres
+        run: pnpm --filter @prodlike/api prisma:deploy
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm scenarios:validate
+
+  scenario-images:
+    name: Scenario sandbox images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build sandbox base + scenario images
+        run: node infra/scripts/build-scenarios.mjs
+      - name: discount-bug — learner tests pass in an isolated sandbox
+        run: |
+          docker run --rm --network none --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges --memory 512m --cpus 1 --pids-limit 128 \
+            prodlike/scenario-discount-bug:latest npm test
+      - name: discount-bug — hidden tests catch the bug (must fail on the original code)
+        run: |
+          set +e
+          docker run --rm --network none -v "$PWD/scenarios/discount-bug/hidden-tests:/workspace/.hidden-tests:ro" \
+            prodlike/scenario-discount-bug:latest npx jest --rootDir . hidden-tests/discount.hidden
+          code=$?
+          if [ "$code" -eq 0 ]; then echo "Hidden tests passed on buggy code: scenario is broken"; exit 1; fi
+          echo "Hidden tests failed as expected (exit $code)"
+      - name: discount-bug — sandbox runs as non-root with no network
+        run: |
+          docker run --rm --network none prodlike/scenario-discount-bug:latest sh -c 'test "$(id -u)" != "0" && ! node -e "require(\"https\").get(\"https://example.com\").on(\"error\",()=>process.exit(1))"'
+          docker run --rm prodlike/scenario-discount-bug:latest git log --oneline
+
+  stack:
+    name: Docker Compose stack boots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose -f infra/docker-compose.yml --env-file .env up -d --build
+      - name: Wait for HTTPS + API health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -skf https://localhost/api/health | tee /tmp/health.json | grep -q '"database":"up"'; then
+              echo; echo "API healthy"; break
+            fi
+            sleep 3
+          done
+          grep -q '"database":"up"' /tmp/health.json
+          curl -skf https://localhost/ | grep -q "Platform status"
+          echo "Web page served over HTTPS"
+      - if: failure()
+        run: docker compose -f infra/docker-compose.yml logs --tail 100

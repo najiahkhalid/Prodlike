@@ -1,0 +1,244 @@
+// Prodlike data model (SRS §2.1 data tier). Phase 0 creates the full schema;
+// later phases add behaviour, not tables, wherever possible.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  GUEST
+  LEARNER
+  INSTRUCTOR
+  ADMIN
+}
+
+enum AttemptState {
+  PROVISIONING
+  READY
+  PIPELINE_RUNNING
+  FAILED_PIPELINE
+  DEPLOYED
+  INCIDENT_ACTIVE
+  RECOVERING
+  RECOVERED
+  COMPLETED
+  ABANDONED
+}
+
+enum Skill {
+  correctness
+  testing
+  deploymentSafety
+  recovery
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique // null for guests
+  name          String
+  organisation  String?
+  role          Role      @default(LEARNER)
+  passwordHash  String?   // bcrypt; null for guests
+  onboardedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime?
+  guestExpiresAt DateTime? // guests are deleted after this (P4)
+
+  ownedCohorts  Cohort[]           @relation("CohortOwner")
+  memberships   CohortMember[]
+  attempts      Attempt[]
+  badges        UserBadge[]
+  resetTokens   PasswordResetToken[]
+  feedback      Feedback[]
+  refreshTokens RefreshToken[]
+
+  @@index([role])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Cohort {
+  id          String         @id @default(cuid())
+  name        String
+  joinCode    String         @unique
+  ownerId     String
+  createdAt   DateTime       @default(now())
+  archivedAt  DateTime?
+  owner       User           @relation("CohortOwner", fields: [ownerId], references: [id])
+  members     CohortMember[]
+  assignments Assignment[]
+
+  @@index([ownerId])
+}
+
+model CohortMember {
+  cohortId String
+  userId   String
+  joinedAt DateTime @default(now())
+  cohort   Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([cohortId, userId])
+  @@index([userId])
+}
+
+model Scenario {
+  id          String            @id @default(cuid())
+  slug        String            @unique
+  title       String
+  difficulty  String
+  published   Boolean           @default(false)
+  guestDemo   Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  versions    ScenarioVersion[]
+  assignments Assignment[]
+}
+
+/// Immutable snapshot of a scenario.yaml; attempts pin the version they started on.
+model ScenarioVersion {
+  id         String    @id @default(cuid())
+  scenarioId String
+  version    Int
+  sourceHash String    // sha256 of scenario.yaml + template
+  definition Json      // validated ScenarioSchema output
+  createdAt  DateTime  @default(now())
+  scenario   Scenario  @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  attempts   Attempt[]
+
+  @@unique([scenarioId, version])
+  @@unique([scenarioId, sourceHash])
+}
+
+model Assignment {
+  id             String    @id @default(cuid())
+  cohortId       String
+  scenarioId     String
+  dueAt          DateTime?
+  randomiseFaults Boolean  @default(true)
+  createdAt      DateTime  @default(now())
+  cohort         Cohort    @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  scenario       Scenario  @relation(fields: [scenarioId], references: [id])
+  attempts       Attempt[]
+
+  @@index([cohortId])
+}
+
+model Attempt {
+  id                String          @id @default(cuid())
+  userId            String
+  scenarioVersionId String
+  assignmentId      String?
+  state             AttemptState    @default(PROVISIONING)
+  seed              Int             // picks the randomised variant
+  variantId         String?
+  strategy          String?         // direct | canary
+  containerId       String?
+  snapshot          Json?           // engine + workspace snapshot, saved every 30 s (NFR-14)
+  score             Int?
+  startedAt         DateTime        @default(now())
+  lastActivityAt    DateTime        @default(now())
+  incidentAt        DateTime?
+  recoveredAt       DateTime?
+  endedAt           DateTime?
+
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenarioVersion   ScenarioVersion @relation(fields: [scenarioVersionId], references: [id])
+  assignment        Assignment?     @relation(fields: [assignmentId], references: [id])
+  events            AttemptEvent[]
+  rubricResults     RubricResult[]
+  hints             HintUsage[]
+
+  @@index([userId, startedAt])
+  @@index([assignmentId])
+  @@index([state])
+}
+
+/// The attempt timeline (FR-13): every significant learner action and engine transition.
+model AttemptEvent {
+  id        BigInt   @id @default(autoincrement())
+  attemptId String
+  type      String   // e.g. tests.passed, deploy.canary, incident.raised, recovery.rollback
+  payload   Json?
+  at        DateTime @default(now())
+  attempt   Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, at])
+  @@index([type])
+}
+
+model RubricResult {
+  id        String  @id @default(cuid())
+  attemptId String
+  checkId   String  // rubric item id from the scenario
+  skill     Skill
+  score     Int
+  max       Int
+  reason    String
+  attempt   Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, checkId])
+}
+
+model HintUsage {
+  id        String   @id @default(cuid())
+  attemptId String
+  hintIndex Int
+  penalty   Int
+  at        DateTime @default(now())
+  attempt   Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, hintIndex])
+}
+
+model Badge {
+  id          String      @id // e.g. clean-rollback
+  name        String
+  description String
+  users       UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  attemptId String?
+  awardedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+}
+
+model Feedback {
+  id           String   @id @default(cuid())
+  userId       String
+  scenarioSlug String
+  rating       Int      // 1..5
+  comment      String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
