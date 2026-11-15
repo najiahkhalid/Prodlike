@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Font families from the bundled @fontsource packages (A2 typography). */
+  --font-head: 'Space Grotesk Variable';
+  --font-body: 'Inter Variable';
+  --font-mono: 'JetBrains Mono Variable';
+}
+
 @layer base {
   body {
     @apply bg-surface-bg font-body text-ink-body antialiased;
@@ -19,5 +26,24 @@
   code,
   pre {
     font-variant-ligatures: none; /* ">=" must read literally in code */
+  }
+}
+
+@layer components {
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+  .field-input {
+    @apply w-full rounded-sm border border-slate-300 bg-white px-3 py-2.5 text-[15px] text-ink;
+    @apply focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/20;
+  }
+  .field-input[aria-invalid='true'] {
+    @apply border-bad focus:ring-bad/20;
+  }
+  .field-error {
+    @apply mt-1 text-[13px] font-medium text-bad-text;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-widest text-accent-text;
   }
 }

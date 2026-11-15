@@ -34,6 +34,12 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-prodlike}:${POSTGRES_PASSWORD:-prodlike}@postgres:5432/${POSTGRES_DB:-prodlike}?schema=public
       API_PORT: 4000
       WEB_ORIGIN: https://localhost
+      APP_URL: https://localhost
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET in .env}
+      COOKIE_SECURE: 'true' # served over HTTPS by Caddy
+      SCENARIOS_DIR: /repo/scenarios
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@prodlike.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     # Phase 2 (sandbox runner): the API starts scenario containers through the Docker socket.
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock
@@ -47,6 +53,7 @@ services:
       - api
     environment:
       API_INTERNAL_URL: http://api:4000
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET in .env}
 
   caddy:
     image: caddy:2-alpine
