@@ -16,6 +16,14 @@ describeDb('Role-based access (FR-02) and catalogue (FR-03, FR-04, FR-20)', () =
   });
   afterAll(() => app.close());
 
+  describe('public endpoints', () => {
+    // Regression: /health must stay public behind the global auth guard (Docker + CI depend on it).
+    it('GET /health needs no login and reports the database', async () => {
+      const res = await http().get('/health').expect(200);
+      expect(res.body).toMatchObject({ status: 'ok', checks: { database: 'up' } });
+    });
+  });
+
   describe('instructor area', () => {
     it('anonymous -> 401', async () => {
       await http().get('/instructor/overview').expect(401);
