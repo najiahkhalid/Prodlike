@@ -72,6 +72,21 @@ export class SandboxReaper implements OnApplicationBootstrap, OnModuleDestroy {
     });
     for (const a of idle) await this.attempts.abandon(a, 'idle-timeout');
     if (idle.length) this.logger.log(`Abandoned ${idle.length} idle attempt(s).`);
+    await this.removeExpiredGuests();
     return idle.length;
+  }
+
+  /** Guest demo accounts live 24 hours unless the guest signs up (then they are no longer GUEST). */
+  async removeExpiredGuests(): Promise<number> {
+    const expired = await this.prisma.user.findMany({
+      where: { role: 'GUEST', guestExpiresAt: { lt: new Date() } },
+      include: { attempts: { where: { state: { in: ACTIVE_STATES } } } },
+    });
+    for (const g of expired) {
+      for (const a of g.attempts) await this.attempts.abandon(a, 'guest-expired');
+      await this.prisma.user.delete({ where: { id: g.id } });
+    }
+    if (expired.length) this.logger.log(`Removed ${expired.length} expired guest account(s).`);
+    return expired.length;
   }
 }

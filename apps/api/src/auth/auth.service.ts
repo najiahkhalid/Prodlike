@@ -12,6 +12,7 @@ import { MailService } from './mail.service';
 import { TokensService, randomToken, sha256 } from './tokens.service';
 
 const BCRYPT_ROUNDS = 12;
+const GUEST_TTL_MS = 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 30 * 60 * 1000;
 // Compared against when the email is unknown, so response time does not reveal which emails exist.
 const DUMMY_HASH = hashSync('prodlike-timing-equaliser', BCRYPT_ROUNDS);
@@ -36,7 +37,29 @@ export class AuthService {
     private readonly config: ConfigService<Env, true>,
   ) {}
 
-  async register(input: z.output<typeof RegisterSchema>, res: Response): Promise<Me> {
+  /** Guest demo (A2 refinement 1): a temporary account, removed after 24 h unless the guest signs up. */
+  async createGuest(res: Response): Promise<Me> {
+    const user = await this.prisma.user.create({
+      data: {
+        name: 'Guest',
+        role: 'GUEST',
+        guestExpiresAt: new Date(Date.now() + GUEST_TTL_MS),
+        onboardedAt: new Date(),
+      },
+    });
+    await this.tokens.issue(res, { sub: user.id, role: user.role, name: user.name });
+    return toMe(user);
+  }
+
+  /**
+   * Sign up. If the visitor is currently a guest, the guest account itself becomes the real
+   * account, so the demo attempt and its debrief are kept ("save this result").
+   */
+  async register(
+    input: z.output<typeof RegisterSchema>,
+    res: Response,
+    current?: { sub: string; role: string },
+  ): Promise<Me> {
     const exists = await this.prisma.user.findUnique({ where: { email: input.email } });
     if (exists) {
       throw new ApiException(
@@ -47,15 +70,24 @@ export class AuthService {
         { email: 'An account with this email already exists.' },
       );
     }
-    const user = await this.prisma.user.create({
-      data: {
-        name: input.name,
-        email: input.email,
-        organisation: input.organisation || null,
-        role: input.role,
-        passwordHash: await hash(input.password, BCRYPT_ROUNDS),
-      },
-    });
+    const data = {
+      name: input.name,
+      email: input.email,
+      organisation: input.organisation || null,
+      role: input.role,
+      passwordHash: await hash(input.password, BCRYPT_ROUNDS),
+    };
+    const guest =
+      current?.role === 'GUEST'
+        ? await this.prisma.user.findFirst({ where: { id: current.sub, role: 'GUEST' } })
+        : null;
+    const user = guest
+      ? await this.prisma.user.update({
+          where: { id: guest.id },
+          data: { ...data, guestExpiresAt: null, onboardedAt: null },
+        })
+      : await this.prisma.user.create({ data });
+    if (guest) await this.tokens.revokeAll(guest.id);
     await this.tokens.issue(res, { sub: user.id, role: user.role, name: user.name });
     return toMe(user);
   }

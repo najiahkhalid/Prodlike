@@ -74,6 +74,8 @@ test('engine: fix → deploy → incident → logs → rollback → finish (Phas
 
   // Finish.
   await page.getByRole('button', { name: '✓ Finish attempt' }).click();
-  await expect(page.getByRole('heading', { name: 'Scenario complete' })).toBeVisible({ timeout: 15_000 });
+  // Phase 4: finishing scores the attempt and opens the debrief.
+  await expect(page).toHaveURL(/\/debrief$/, { timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Debrief: The Rs 1,000 Discount Bug' })).toBeVisible();
   await expect(page.getByText(/by rolling back/)).toBeVisible();
 });

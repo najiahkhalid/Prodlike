@@ -14,7 +14,7 @@ const MENUS: Record<Exclude<Role, 'GUEST'>, NavItem[]> = {
   LEARNER: [
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/scenarios', label: 'Scenarios' },
-    { href: '/progress', label: 'Progress History', soon: 'Phase 4' },
+    { href: '/progress', label: 'Progress History' },
     { href: '/settings', label: 'Profile & Settings', soon: 'Phase 5' },
   ],
   INSTRUCTOR: [

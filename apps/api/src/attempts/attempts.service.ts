@@ -5,8 +5,10 @@ import type {
   AccessTokenClaims,
   AttemptView,
   CommandResult,
+  Debrief,
   DeployInput,
   EngineSnapshot,
+  HintResult,
   Scenario,
   TestRunResult,
   WorkspaceFile,
@@ -16,6 +18,7 @@ import { join } from 'node:path';
 import { ApiException, Errors } from '../common/api-exception';
 import type { Env } from '../config/env';
 import { EngineService } from '../engine/engine.service';
+import { ScoringService } from '../scoring/scoring.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { decideCommand } from '../sandbox/command-policy';
 import { safeWorkspacePath } from '../sandbox/path-policy';
@@ -67,6 +70,7 @@ export class AttemptsService {
     private readonly registry: ScenarioRegistry,
     private readonly config: ConfigService<Env, true>,
     private readonly engine: EngineService,
+    private readonly scoring: ScoringService,
   ) {}
 
   // ---------------------------------------------------------------- lifecycle
@@ -77,6 +81,14 @@ export class AttemptsService {
     const def = this.registry.get(slug);
     if (!scenarioRow || !def || !(scenarioRow.published || user.role === 'ADMIN')) {
       throw Errors.notFound('This scenario');
+    }
+    if (user.role === 'GUEST' && !scenarioRow.guestDemo) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        'SIGN_UP_REQUIRED',
+        'This scenario needs a free account.',
+        'Create an account to keep going. Your demo result is kept.',
+      );
     }
 
     const existing = await this.prisma.attempt.findFirst({
@@ -265,13 +277,102 @@ export class AttemptsService {
     return this.engine.rollback(attempt, await this.defOf(attempt));
   }
 
-  /** Finish once production is healthy again; frees the sandbox. Scoring arrives in Phase 4. */
-  async finish(user: AccessTokenClaims, id: string): Promise<EngineSnapshot> {
+  /**
+   * Finish once production is healthy: run the hidden checks, score the rubric (FR-14), build the
+   * debrief (FR-15), award badges, then free the sandbox.
+   */
+  async finish(user: AccessTokenClaims, id: string): Promise<Debrief> {
     const attempt = await this.active(user, id);
-    const snapshot = await this.engine.finish(attempt, await this.defOf(attempt));
-    await this.sandbox.destroy(attempt.containerId);
+    const def = await this.defOf(attempt);
+    const engine = await this.engine.snapshot(attempt, def);
+    if (!engine.canFinish) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        'NOT_FINISHED',
+        'This scenario is not finished yet.',
+        'Ship your change and make sure production is healthy, then finish.',
+      );
+    }
+    const ready = await this.ensureSandbox(attempt);
+    const facts = await this.scoring.collectFacts(id, def, ready.containerId!, engine);
+    await this.engine.finish(ready, def);
+    const completed = await this.prisma.attempt.findUniqueOrThrow({ where: { id } });
+    const debrief = await this.scoring.finalize(completed, def, facts, engine);
+    await this.sandbox.destroy(ready.containerId);
     await this.prisma.attempt.update({ where: { id }, data: { containerId: null } });
-    return snapshot;
+    return debrief;
+  }
+
+  /** The stored debrief of a completed attempt (FR-15). */
+  async debrief(user: AccessTokenClaims, id: string): Promise<Debrief> {
+    const attempt = await this.owned(user, id);
+    const stored = (attempt.snapshot as { debrief?: Debrief } | null)?.debrief;
+    if (attempt.state !== 'COMPLETED' || !stored) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        'NO_DEBRIEF_YET',
+        'The debrief is ready once you finish the attempt.',
+        'Go back to the workspace and finish the scenario.',
+      );
+    }
+    return stored;
+  }
+
+  /**
+   * A2 refinement 3: a context-aware hint, each costing `hintPenalty` points. The hint offered
+   * depends on where the learner is: before the tests pass, before deploying, or during the incident.
+   */
+  async useHint(user: AccessTokenClaims, id: string): Promise<HintResult> {
+    const attempt = await this.active(user, id);
+    const def = await this.defOf(attempt);
+    const used = await this.prisma.hintUsage.findMany({ where: { attemptId: id }, orderBy: { at: 'asc' } });
+    const usedIdx = new Set(used.map((h) => h.hintIndex));
+    const types = new Set(
+      (await this.prisma.attemptEvent.findMany({ where: { attemptId: id }, select: { type: true } })).map(
+        (e) => e.type,
+      ),
+    );
+    const phase =
+      attempt.state === 'INCIDENT_ACTIVE'
+        ? 'incident-active'
+        : types.has('deploy.succeeded')
+          ? 'after-deploy'
+          : types.has('tests.passed')
+            ? 'before-deploy'
+            : 'before-tests-pass';
+    const open = def.hints.map((h, index) => ({ ...h, index })).filter((h) => !usedIdx.has(h.index));
+    // Prefer a hint written for this exact step; otherwise one for the next step (never an
+    // incident hint before there is an incident), otherwise a general one.
+    const ahead: Record<string, string[]> = {
+      'before-tests-pass': ['before-tests-pass', 'before-deploy'],
+      'before-deploy': ['before-deploy'],
+      'after-deploy': [],
+      'incident-active': ['incident-active'],
+    };
+    const hint =
+      open.find((h) => h.when === phase) ??
+      open.find((h) => ahead[phase].includes(h.when)) ??
+      open.find((h) => h.when === 'any');
+    if (!hint) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        'NO_MORE_HINTS',
+        'There are no more hints for this step.',
+        'Re-read the brief and the logs: you have what you need.',
+      );
+    }
+    await this.prisma.hintUsage.create({
+      data: { attemptId: id, hintIndex: hint.index, penalty: def.hintPenalty },
+    });
+    await this.event(id, 'hint.used', { index: hint.index, penalty: def.hintPenalty, phase });
+    await this.touch(id);
+    return {
+      index: hint.index,
+      text: hint.text,
+      penalty: def.hintPenalty,
+      used: used.length + 1,
+      remaining: def.hints.length - used.length - 1,
+    };
   }
 
   /** Used by the socket gateway when a browser joins an attempt's live channel. */
@@ -387,9 +488,22 @@ export class AttemptsService {
         recovered: events.some((e) => e.type === 'incident.resolved'),
       },
       engine: await this.engine.snapshot(attempt, def),
+      hints: await this.hintsOf(attempt.id, def),
+      guest:
+        (await this.prisma.user.findUnique({ where: { id: attempt.userId }, select: { role: true } }))
+          ?.role === 'GUEST',
       ...((attempt.provisionedInMs ?? lastReady?.ms) !== undefined
         ? { provisionedInMs: attempt.provisionedInMs ?? lastReady?.ms }
         : {}),
+    };
+  }
+
+  private async hintsOf(attemptId: string, def: Scenario): Promise<AttemptView['hints']> {
+    const used = await this.prisma.hintUsage.findMany({ where: { attemptId }, orderBy: { at: 'asc' } });
+    return {
+      used: used.map((h) => ({ index: h.hintIndex, text: def.hints[h.hintIndex]?.text ?? '' })),
+      remaining: Math.max(0, def.hints.length - used.length),
+      penalty: def.hintPenalty,
     };
   }
 

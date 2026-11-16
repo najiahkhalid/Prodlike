@@ -15,7 +15,7 @@ Prodlike is a CS344 Web Engineering (NUST SEECS) group project by Team Prodlike:
 - [x] P1 Accounts, roles, password reset, onboarding tour, catalogue, brief, admin publish (FR-01..04, FR-20 part)
 - [x] P2 Sandbox runner + workspace (FR-05..07): dockerode warm pool, allowlisted exec, CodeMirror editor, HTTP terminal, snapshot resume (ADR-006)
 - [x] P3 Engine: real pipeline in sandbox, direct/canary deploy, scenario-driven faults, rollback/hotfix, Socket.IO live events, R3F 3D + SVG 2D map, metrics (FR-08..12, ADR-007)
-- [ ] P4 Scoring, debrief, progress, hints, guest demo (FR-13..16)
+- [x] P4 Scoring (hidden tests in sandbox + rubric), debrief, badges, progress history, context-aware hints, guest demo with claim-on-signup (FR-13..16, ADR-008)
 - [ ] P5 Instructor cohorts/assignments/reports/CSV, admin, scenario builder (FR-17..20)
 - [ ] P6 Scenarios 2–4, Lighthouse/axe/k6 checks, pilot
 

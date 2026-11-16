@@ -54,6 +54,7 @@ export const AUTH_COOKIES = { access: 'pl_at', refresh: 'pl_rt' } as const;
 
 /** Home page for each role after login. */
 export function homeFor(role: Role): string {
+  if (role === 'GUEST') return '/demo';
   if (role === 'INSTRUCTOR') return '/instructor';
   if (role === 'ADMIN') return '/admin';
   return '/dashboard';

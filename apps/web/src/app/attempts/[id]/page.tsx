@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import type { AttemptView } from '@prodlike/shared';
 import { Workspace } from '@/components/workspace/Workspace';
 import { requireMe, serverApi } from '@/lib/api';
@@ -55,22 +56,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
     );
   }
   const a = res.data;
-  if (a.state === 'COMPLETED') {
-    const inc = a.engine.incident;
-    return (
-      <EndCard title="Scenario complete" href={`/scenarios/${a.scenario.slug}`} cta="Back to the brief">
-        <p>
-          {inc?.resolvedAt
-            ? `You restored service in ${a.engine.timeToRecoverSeconds}s by ${inc.resolvedBy === 'rollback' ? 'rolling back' : 'shipping a hotfix'}.`
-            : 'You shipped a release that kept production healthy.'}{' '}
-          Production is on <span className="font-mono text-console-text">{a.engine.release}</span>.
-        </p>
-        <p className="mt-2 text-sm">
-          Your scored debrief, with the timeline of your decisions, arrives in Phase 4.
-        </p>
-      </EndCard>
-    );
-  }
+  if (a.state === 'COMPLETED') redirect(`/attempts/${a.id}/debrief`);
   if (a.state === 'ABANDONED') {
     return (
       <EndCard title="This attempt has ended" href={`/scenarios/${a.scenario.slug}`} cta="Back to the brief">
