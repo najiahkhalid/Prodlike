@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { sourceSlug } from '@prodlike/shared';
 import type { Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import { SandboxService } from '../sandbox/sandbox.service';
@@ -32,9 +33,10 @@ export class SandboxReaper implements OnApplicationBootstrap, OnModuleDestroy {
     }
     try {
       await this.reconcile();
-      for (const s of this.registry.all()) {
-        if (await this.sandbox.imageExists(s.slug)) void this.sandbox.refill(s.slug);
-        else this.logger.warn(`No sandbox image for "${s.slug}". Build it with: pnpm scenarios:build`);
+      // One warm pool per sandbox image (Builder variants share their base scenario's image).
+      for (const slug of new Set(this.registry.all().map(sourceSlug))) {
+        if (await this.sandbox.imageExists(slug)) void this.sandbox.refill(slug);
+        else this.logger.warn(`No sandbox image for "${slug}". Build it with: pnpm scenarios:build`);
       }
     } catch (e) {
       this.logger.error(`Sandbox start-up failed: ${(e as Error).message}`);

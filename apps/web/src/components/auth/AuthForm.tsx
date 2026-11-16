@@ -25,7 +25,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
+    const { joinCode = '', ...data } = Object.fromEntries(new FormData(e.currentTarget)) as Record<
+      string,
+      string
+    >;
     const payload = mode === 'signup' ? { ...data, role } : data;
 
     // Same zod schema as the API: instant feedback, and the API checks again anyway.
@@ -47,7 +50,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
         method: 'POST',
         body: JSON.stringify(parsed.data),
       });
-      router.push(safeNext(params.get('next')) ?? homeFor(me.role));
+      // Optional class code at sign-up (FR-17). A bad code must not lose the new account.
+      let joinFailed = false;
+      if (mode === 'signup' && role === 'LEARNER' && joinCode.trim()) {
+        joinFailed = await clientApi('/cohorts/join', {
+          method: 'POST',
+          body: JSON.stringify({ code: joinCode }),
+        }).then(
+          () => false,
+          () => true,
+        );
+      }
+      router.push(joinFailed ? '/dashboard?join=failed' : (safeNext(params.get('next')) ?? homeFor(me.role)));
       router.refresh();
     } catch (err) {
       if (err instanceof ClientApiError) {
@@ -117,6 +131,19 @@ export function AuthForm({ mode }: { mode: Mode }) {
             }
             autoComplete="organization"
             error={fields.organisation}
+          />
+        )}
+        {signup && role === 'LEARNER' && (
+          <Field
+            id="joinCode"
+            label={
+              <>
+                Class join code <span className="font-normal text-ink-muted">(optional)</span>
+              </>
+            }
+            placeholder="ABCD-1234"
+            autoComplete="off"
+            hint="From your instructor. You can also join a class later from your dashboard."
           />
         )}
         <Field

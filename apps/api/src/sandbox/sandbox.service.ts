@@ -118,6 +118,11 @@ export class SandboxService implements OnModuleDestroy {
     }
   }
 
+  /** Warm containers ready per sandbox image (admin sandbox health, FR-20). */
+  poolSizes(): Record<string, number> {
+    return Object.fromEntries([...this.pool.entries()].map(([slug, ids]) => [slug, ids.length]));
+  }
+
   pooledIds(): Set<string> {
     return new Set([...this.pool.values()].flat());
   }

@@ -45,9 +45,14 @@ export interface ScenarioBrief {
   company: Scenario['company'];
   brief: Scenario['brief'];
   terminalCommands: string[];
-  rubric: { label: string; skill: Skill; weight: number }[];
+  rubric: { id: string; label: string; skill: Skill; weight: number }[];
   hintPenalty: number;
   hintCount: number;
+}
+
+/** The folder a scenario's files live in: its own, or the one a Builder variant is based on. */
+export function sourceSlug(s: { slug: string; basedOn?: string }): string {
+  return s.basedOn ?? s.slug;
 }
 
 /** Reduce a full scenario to the safe, public brief. */
@@ -63,7 +68,7 @@ export function toBrief(s: Scenario): ScenarioBrief {
     company: s.company,
     brief: s.brief,
     terminalCommands: s.terminal.allow.map((c) => c.command),
-    rubric: s.rubric.map((r) => ({ label: r.label, skill: r.skill, weight: r.weight })),
+    rubric: s.rubric.map((r) => ({ id: r.id, label: r.label, skill: r.skill, weight: r.weight })),
     hintPenalty: s.hintPenalty,
     hintCount: s.hints.length,
   };

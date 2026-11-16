@@ -1,7 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Attempt, Prisma } from '@prisma/client';
-import type { BadgeView, Debrief, EngineSnapshot, ProgressResponse, Scenario, Skill } from '@prodlike/shared';
+import {
+  sourceSlug,
+  type BadgeView,
+  type Debrief,
+  type EngineSnapshot,
+  type ProgressResponse,
+  type Scenario,
+  type Skill,
+} from '@prodlike/shared';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseJestJson } from '../attempts/jest-results';
@@ -81,7 +89,7 @@ export class ScoringService implements OnModuleInit {
       for (const file of item.check.files) {
         const source = join(
           this.config.get('SCENARIOS_DIR', { infer: true }),
-          def.slug,
+          sourceSlug(def),
           'hidden-tests',
           file,
         );

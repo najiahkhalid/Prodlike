@@ -23,7 +23,10 @@ export class ScenariosService {
   /** FR-03: published scenarios (admins also see drafts), filtered by difficulty, skill and text. */
   async list(query: CatalogueQuery, user?: AccessTokenClaims): Promise<CatalogueResponse> {
     const isAdmin = user?.role === 'ADMIN';
-    const rows = await this.prisma.scenario.findMany({ where: isAdmin ? {} : { published: true } });
+    // Everyone sees published scenarios; authors also see their own Builder variants; admins see all.
+    const rows = await this.prisma.scenario.findMany({
+      where: isAdmin ? {} : { OR: [{ published: true }, ...(user ? [{ authorId: user.sub }] : [])] },
+    });
 
     const best = new Map<string, number>();
     if (user) {
@@ -83,9 +86,26 @@ export class ScenariosService {
   async brief(slug: string, user?: AccessTokenClaims): Promise<ScenarioBrief> {
     const row = await this.prisma.scenario.findUnique({ where: { slug } });
     const def = this.registry.get(slug);
-    const visible = row && def && (row.published || user?.role === 'ADMIN');
+    const visible = row && def && (await this.canAccess(user, row));
     if (!visible) throw Errors.notFound('This scenario');
     return toBrief(def);
+  }
+
+  /**
+   * Who may open a scenario: anyone if it is published; admins always; the author of a Builder
+   * variant; and learners whose cohort has it assigned (so instructors can assign unpublished variants).
+   */
+  async canAccess(
+    user: AccessTokenClaims | undefined,
+    row: { id: string; published: boolean; authorId: string | null },
+  ) {
+    if (row.published || user?.role === 'ADMIN') return true;
+    if (!user) return false;
+    if (row.authorId === user.sub) return true;
+    const assigned = await this.prisma.assignment.count({
+      where: { scenarioId: row.id, cohort: { archivedAt: null, members: { some: { userId: user.sub } } } },
+    });
+    return assigned > 0;
   }
 
   /** FR-20 (part): admins publish or unpublish a scenario. */
