@@ -6,3 +6,4 @@ export * from './auth';
 export * from './catalogue';
 export * from './attempts';
 export * from './debrief';
+export * from './instructor';

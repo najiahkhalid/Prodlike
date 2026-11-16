@@ -4,7 +4,7 @@
 
 CS344 Web Engineering · NUST SEECS · Team Prodlike: Najiah Khalid (lead), Zeeshan Haider Awan, Bilal Ahmed.
 
-> **Status: Phase 4 (Scoring + debrief).** Finishing an attempt runs hidden behavioural checks and scores the rubric; learners get a debrief (score, reasons, decision timeline, senior-engineer tips, badges), progress history and paid hints. Visitors can play a no-sign-up guest demo and keep the result by signing up. Next: Phase 5, instructor cohorts, assignments and reports.
+> **Status: Phase 5 (Instructor + admin).** Instructors create classes with join codes, assign scenarios with deadlines, and get per-learner and class results (distribution, common mistakes, CSV export, drill-down into any learner's debrief) with no manual grading. Admins manage users and roles and watch sandbox health. The Scenario Builder makes private variants of a scenario. Next: Phase 6, more scenarios, quality audits and the pilot.
 
 ## Repository layout
 

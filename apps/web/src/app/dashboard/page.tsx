@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { Card, buttonClasses } from '@prodlike/ui';
-import type { CatalogueResponse, ProgressResponse } from '@prodlike/shared';
+import { Badge, Card, buttonClasses } from '@prodlike/ui';
+import type { CatalogueResponse, MyCohorts, ProgressResponse } from '@prodlike/shared';
 import { AppShell, DeniedNotice } from '@/components/AppShell';
+import { JoinClass } from '@/components/JoinClass';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { ScenarioCard } from '@/components/ScenarioCard';
 import { requireMe, serverApi } from '@/lib/api';
@@ -14,13 +15,15 @@ const duration = (s: number | null) =>
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ denied?: string }>;
+  searchParams: Promise<{ denied?: string; join?: string }>;
 }) {
-  const [{ denied }, me] = await Promise.all([searchParams, requireMe('/dashboard')]);
-  const [catalogue, progress] = await Promise.all([
+  const [{ denied, join }, me] = await Promise.all([searchParams, requireMe('/dashboard')]);
+  const [catalogue, progress, classes] = await Promise.all([
     serverApi<CatalogueResponse>('/scenarios'),
     serverApi<ProgressResponse>('/me/progress'),
+    serverApi<MyCohorts>('/me/cohorts'),
   ]);
+  const my = classes.ok ? classes.data : { cohorts: [], assignments: [] };
   const scenarios = catalogue.ok ? catalogue.data.items : [];
   const p = progress.ok ? progress.data : null;
   const next = scenarios.find((s) => s.bestScore === null) ?? scenarios[0];
@@ -76,6 +79,75 @@ export default async function DashboardPage({
               : 'Earn them by shipping safely'}
           </div>
         </Card>
+      </div>
+
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_1.4fr]">
+        <section>
+          <h2 className="mb-3 text-xl font-semibold">Your classes</h2>
+          <Card>
+            {my.cohorts.length > 0 && (
+              <ul className="mb-4 grid gap-1 text-sm" data-testid="my-classes">
+                {my.cohorts.map((c) => (
+                  <li key={c.id}>
+                    <b className="text-ink">{c.name}</b>{' '}
+                    <span className="text-ink-muted">with {c.instructor}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <JoinClass
+              initialError={
+                join === 'failed' ? 'Your account was created, but that class code did not work.' : undefined
+              }
+            />
+          </Card>
+        </section>
+        <section>
+          <h2 className="mb-3 text-xl font-semibold">Assigned to you</h2>
+          <Card className="p-0">
+            {my.assignments.length === 0 ? (
+              <p className="p-5 text-ink-muted">
+                {my.cohorts.length
+                  ? 'Your instructors have not assigned anything yet.'
+                  : 'Join a class to see assignments here.'}
+              </p>
+            ) : (
+              <table className="w-full text-sm" aria-label="Assignments">
+                <tbody>
+                  {my.assignments.map((a) => (
+                    <tr key={a.id} className="border-b border-surface-border last:border-0">
+                      <td className="px-5 py-3">
+                        <div className="font-medium text-ink">{a.scenario.title}</div>
+                        <div className="text-xs text-ink-muted">
+                          {a.cohort}
+                          {a.dueAt &&
+                            ` · due ${new Date(a.dueAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        {a.status === 'done' ? (
+                          <Badge tone="ok">✓ Done · {a.bestScore}</Badge>
+                        ) : a.status === 'late' ? (
+                          <Badge tone="warn">⚑ Late</Badge>
+                        ) : (
+                          <Badge tone="primary">To do</Badge>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <Link
+                          href={`/scenarios/${a.scenario.slug}`}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          {a.status === 'done' ? 'Improve' : 'Start'}
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Card>
+        </section>
       </div>
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_1.4fr]">

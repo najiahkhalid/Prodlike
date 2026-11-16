@@ -59,7 +59,7 @@ test('instructors land on the instructor dashboard', async ({ page }) => {
   await signUp(page, { name: 'Dr Sara Malik', email: uniqueEmail('teacher'), role: 'Instructor' });
   await expect(page).toHaveURL(/\/instructor$/);
   await expect(page.getByRole('heading', { name: 'Instructor Dashboard' })).toBeVisible();
-  await expect(page.getByText('You have no cohorts yet.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Create your first class' })).toBeVisible();
 });
 
 test('login shows helpful errors (NFR-09) and logged-in users skip the login page', async ({ page }) => {
@@ -98,9 +98,10 @@ test('forgot password always confirms without revealing accounts', async ({ page
 test('admin can unpublish and republish a scenario (FR-20)', async ({ page }) => {
   await logIn(page, ADMIN.email, ADMIN.password);
   await expect(page).toHaveURL(/\/admin$/);
-  const row = page.getByRole('row', { name: /discount-bug/ });
-  await row.getByRole('button', { name: 'Unpublish' }).click();
+  // Exact slug: instructors' Builder variants (discount-bug-v-…) are listed here too.
+  const row = page.getByRole('row').filter({ has: page.getByText('discount-bug', { exact: true }) });
+  await row.getByRole('button', { name: 'Unpublish', exact: true }).click();
   await expect(row.getByText('Draft')).toBeVisible();
-  await row.getByRole('button', { name: 'Publish' }).click();
+  await row.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(row.getByText('✓ Published')).toBeVisible();
 });

@@ -63,6 +63,11 @@ export class ScenarioRegistry implements OnApplicationBootstrap {
     return [...this.bySlug.values()];
   }
 
+  /** Add a definition created at runtime (Scenario Builder variant, FR-19). */
+  register(def: Scenario) {
+    this.bySlug.set(def.slug, def);
+  }
+
   async sync(): Promise<void> {
     const root = this.config.get('SCENARIOS_DIR', { infer: true });
     const autoPublish = this.config.get('SCENARIOS_AUTO_PUBLISH', { infer: true });
@@ -110,6 +115,16 @@ export class ScenarioRegistry implements OnApplicationBootstrap {
         this.logger.log(`Scenario ${s.slug}: new version ${(last?.version ?? 0) + 1}`);
       }
       this.bySlug.set(s.slug, s);
+    }
+
+    // Scenario Builder variants live only in the database (their files come from `basedOn`).
+    const variants = await this.prisma.scenario.findMany({
+      where: { basedOn: { not: null } },
+      include: { versions: { orderBy: { version: 'desc' }, take: 1 } },
+    });
+    for (const v of variants) {
+      const def = v.versions[0]?.definition as unknown as Scenario | undefined;
+      if (def && this.bySlug.has(v.basedOn!)) this.bySlug.set(v.slug, def);
     }
     this.logger.log(`Scenarios loaded: ${[...this.bySlug.keys()].join(', ') || 'none'}`);
   }

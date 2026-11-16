@@ -6,13 +6,13 @@ import { requireMe, serverApi } from '@/lib/api';
 
 export const metadata = { title: 'Admin' };
 
-/** FR-20 (part): publish / unpublish scenarios. Users & roles and sandbox health follow in Phase 5. */
+/** FR-20: publish / unpublish scenarios (users & roles and sandbox health have their own pages). */
 export default async function AdminPage() {
   const me = await requireMe('/admin');
   const res = await serverApi<CatalogueResponse>('/scenarios'); // admins also receive drafts
 
   return (
-    <AppShell me={me} active="/admin" crumbs="Admin" title="Scenarios">
+    <AppShell me={me} active="/admin" crumbs="Admin" title="Publish scenarios">
       <Card>
         <p className="mb-4 text-sm text-ink-muted">
           Scenarios are loaded from the <code className="font-mono">scenarios/</code> folder when the API

@@ -65,7 +65,16 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-export function DebriefView({ d, guest }: { d: Debrief; guest: boolean }) {
+/** `readOnly`: an instructor viewing a learner's debrief, so no "what next" for themselves. */
+export function DebriefView({
+  d,
+  guest,
+  readOnly = false,
+}: {
+  d: Debrief;
+  guest: boolean;
+  readOnly?: boolean;
+}) {
   const summary = [
     d.resolvedBy === 'prevented'
       ? 'You spotted the risky change and fixed it before shipping, so production never broke.'
@@ -230,34 +239,36 @@ export function DebriefView({ d, guest }: { d: Debrief; guest: boolean }) {
         )}
       </Card>
 
-      <section>
-        <h2 className="mb-3 text-xl font-semibold">What next</h2>
-        <div className="flex flex-wrap gap-3">
-          <Link href={`/scenarios/${d.scenario.slug}`} className={buttonClasses('secondary')}>
-            ⟲ Try this scenario again
-          </Link>
-          {!guest && (
-            <Link href="/progress" className={buttonClasses('secondary')}>
-              See your progress
+      {!readOnly && (
+        <section>
+          <h2 className="mb-3 text-xl font-semibold">What next</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link href={`/scenarios/${d.scenario.slug}`} className={buttonClasses('secondary')}>
+              ⟲ Try this scenario again
             </Link>
-          )}
-        </div>
-        {d.recommendations.length > 0 && !guest && (
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {d.recommendations.map((r) => (
-              <Link
-                key={r.slug}
-                href={`/scenarios/${r.slug}`}
-                className="rounded border border-surface-border bg-white p-4 shadow-card hover:border-primary"
-              >
-                <Badge>{r.difficulty}</Badge>
-                <h3 className="mt-2 font-semibold">{r.title}</h3>
-                <p className="text-sm text-ink-muted">{r.reason}</p>
+            {!guest && (
+              <Link href="/progress" className={buttonClasses('secondary')}>
+                See your progress
               </Link>
-            ))}
+            )}
           </div>
-        )}
-      </section>
+          {d.recommendations.length > 0 && !guest && (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {d.recommendations.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/scenarios/${r.slug}`}
+                  className="rounded border border-surface-border bg-white p-4 shadow-card hover:border-primary"
+                >
+                  <Badge>{r.difficulty}</Badge>
+                  <h3 className="mt-2 font-semibold">{r.title}</h3>
+                  <p className="text-sm text-ink-muted">{r.reason}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

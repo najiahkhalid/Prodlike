@@ -114,6 +114,11 @@ export const ScenarioSchema = z
   .object({
     schemaVersion: z.literal(1),
     slug,
+    /**
+     * Scenario Builder variants only (FR-19): the file-based scenario whose sandbox image,
+     * template and hidden tests this variant reuses. Absent for scenarios defined by a folder.
+     */
+    basedOn: slug.optional(),
     title: z.string().min(1),
     summary: z.string().min(1),
     difficulty: z.enum(DIFFICULTIES),

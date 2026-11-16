@@ -15,10 +15,12 @@ import type {
 } from '@prodlike/shared';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { sourceSlug } from '@prodlike/shared';
 import { ApiException, Errors } from '../common/api-exception';
 import type { Env } from '../config/env';
 import { EngineService } from '../engine/engine.service';
 import { ScoringService } from '../scoring/scoring.service';
+import { ScenariosService } from '../scenarios/scenarios.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { decideCommand } from '../sandbox/command-policy';
 import { safeWorkspacePath } from '../sandbox/path-policy';
@@ -71,6 +73,7 @@ export class AttemptsService {
     private readonly config: ConfigService<Env, true>,
     private readonly engine: EngineService,
     private readonly scoring: ScoringService,
+    private readonly scenarios: ScenariosService,
   ) {}
 
   // ---------------------------------------------------------------- lifecycle
@@ -79,7 +82,7 @@ export class AttemptsService {
   async start(user: AccessTokenClaims, slug: string): Promise<AttemptView> {
     const scenarioRow = await this.prisma.scenario.findUnique({ where: { slug } });
     const def = this.registry.get(slug);
-    if (!scenarioRow || !def || !(scenarioRow.published || user.role === 'ADMIN')) {
+    if (!scenarioRow || !def || !(await this.scenarios.canAccess(user, scenarioRow))) {
       throw Errors.notFound('This scenario');
     }
     if (user.role === 'GUEST' && !scenarioRow.guestDemo) {
@@ -108,9 +111,18 @@ export class AttemptsService {
     if (!version) throw Errors.notFound('This scenario');
 
     await this.assertCapacity();
+    // Count it towards the learner's assignment of this scenario, if any (earliest deadline first).
+    const assignment = await this.prisma.assignment.findFirst({
+      where: {
+        scenarioId: scenarioRow.id,
+        cohort: { archivedAt: null, members: { some: { userId: user.sub } } },
+      },
+      orderBy: [{ dueAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
+    });
     const attempt = await this.prisma.attempt.create({
       data: {
         userId: user.sub,
+        assignmentId: assignment?.id ?? null,
         scenarioVersionId: version.id,
         state: 'PROVISIONING',
         seed: Math.floor(Math.random() * 2 ** 31),
@@ -181,7 +193,7 @@ export class AttemptsService {
       this.lastSaveEvent.set(key, Date.now());
       await this.event(id, 'file.saved', { path });
     }
-    return { path, readOnly: false, modified: content !== this.templateContent(def.slug, path) };
+    return { path, readOnly: false, modified: content !== this.templateContent(sourceSlug(def), path) };
   }
 
   // ---------------------------------------------------------------- terminal + tests
@@ -396,10 +408,10 @@ export class AttemptsService {
     let containerId: string;
     try {
       if (!(await this.sandbox.available())) throw new Error('Docker is not running on the server.');
-      if (!(await this.sandbox.imageExists(def.slug))) {
-        throw new Error(`the image for "${def.slug}" has not been built (run pnpm scenarios:build).`);
+      if (!(await this.sandbox.imageExists(sourceSlug(def)))) {
+        throw new Error(`the image for "${sourceSlug(def)}" has not been built (run pnpm scenarios:build).`);
       }
-      containerId = await this.sandbox.claim(def.slug);
+      containerId = await this.sandbox.claim(sourceSlug(def));
     } catch (e) {
       this.logger.error(`Provisioning failed for attempt ${attempt.id}: ${(e as Error).message}`);
       throw errUnavailable((e as Error).message);
@@ -479,7 +491,8 @@ export class AttemptsService {
       files: paths.map((path) => ({
         path,
         readOnly: def.workspace.readOnly.includes(path),
-        modified: path in snapshot.files && snapshot.files[path] !== this.templateContent(def.slug, path),
+        modified:
+          path in snapshot.files && snapshot.files[path] !== this.templateContent(sourceSlug(def), path),
       })),
       progress: {
         changed: events.some((e) => e.type === 'file.saved'),
