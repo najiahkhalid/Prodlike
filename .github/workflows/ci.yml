@@ -78,23 +78,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build sandbox base + scenario images
         run: node infra/scripts/build-scenarios.mjs
-      - name: discount-bug — learner tests pass in an isolated sandbox
-        run: |
-          docker run --rm --network none --read-only --tmpfs /tmp --cap-drop ALL \
-            --security-opt no-new-privileges --memory 512m --cpus 1 --pids-limit 128 \
-            prodlike/scenario-discount-bug:latest npm test
-      - name: discount-bug — hidden tests catch the bug (must fail on the original code)
-        run: |
-          set +e
-          docker run --rm --network none -v "$PWD/scenarios/discount-bug/hidden-tests:/workspace/.hidden-tests:ro" \
-            prodlike/scenario-discount-bug:latest npx jest --rootDir . hidden-tests/discount.hidden
-          code=$?
-          if [ "$code" -eq 0 ]; then echo "Hidden tests passed on buggy code: scenario is broken"; exit 1; fi
-          echo "Hidden tests failed as expected (exit $code)"
-      - name: discount-bug — sandbox runs as non-root with no network
-        run: |
-          docker run --rm --network none prodlike/scenario-discount-bug:latest sh -c 'test "$(id -u)" != "0" && ! node -e "require(\"https\").get(\"https://example.com\").on(\"error\",()=>process.exit(1))"'
-          docker run --rm prodlike/scenario-discount-bug:latest git log --oneline
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @prodlike/shared build
+      - name: Every scenario — tests pass, hidden tests catch the bug, reference fixes pass, sandbox is isolated
+        run: node infra/scripts/check-scenarios.mjs
 
   stack:
     name: Docker Compose stack boots

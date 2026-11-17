@@ -4,7 +4,7 @@
 
 CS344 Web Engineering · NUST SEECS · Team Prodlike: Najiah Khalid (lead), Zeeshan Haider Awan, Bilal Ahmed.
 
-> **Status: Phase 5 (Instructor + admin).** Instructors create classes with join codes, assign scenarios with deadlines, and get per-learner and class results (distribution, common mistakes, CSV export, drill-down into any learner's debrief) with no manual grading. Admins manage users and roles and watch sandbox health. The Scenario Builder makes private variants of a scenario. Next: Phase 6, more scenarios, quality audits and the pilot.
+> **Status: Phase 6A (Scenarios).** Four complete scenarios: the Rs 1,000 Discount Bug (beginner), Free Delivery Over Rs 1,500 and The Missing Env Variable (intermediate), and Friday Deploy Gone Wrong (advanced). Assignments can randomise each learner's fault (variants), and every scenario ships reference solutions that CI plays end to end. Next: Phase 6B quality gates (accessibility, performance, load, security) and 6C pilot and release.
 
 ## Repository layout
 
@@ -85,14 +85,15 @@ pnpm build && SANDBOX_TESTS=1 PW_CHANNEL=chrome pnpm --filter @prodlike/e2e e2e 
 
 ## Common scripts
 
-| Command                                      | What it does                                                           |
-| -------------------------------------------- | ---------------------------------------------------------------------- |
-| `pnpm dev`                                   | Run web, API and package watchers                                      |
-| `pnpm build` / `lint` / `typecheck` / `test` | Run across the whole monorepo (Turborepo)                              |
-| `pnpm scenarios:validate`                    | Validate every `scenarios/*/scenario.yaml` and the files it references |
-| `pnpm scenarios:build`                       | Build the sandbox base image and all scenario images (needs Docker)    |
-| `pnpm db:migrate`                            | Create and apply a Prisma migration in development                     |
-| `pnpm format`                                | Format with Prettier                                                   |
+| Command                                      | What it does                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `pnpm dev`                                   | Run web, API and package watchers                                                     |
+| `pnpm build` / `lint` / `typecheck` / `test` | Run across the whole monorepo (Turborepo)                                             |
+| `pnpm scenarios:validate`                    | Validate every `scenarios/*/scenario.yaml` and the files it references                |
+| `pnpm scenarios:build`                       | Build the sandbox base image and all scenario images (needs Docker)                   |
+| `node infra/scripts/check-scenarios.mjs`     | Check every built scenario image: tests, hidden tests, reference solutions, isolation |
+| `pnpm db:migrate`                            | Create and apply a Prisma migration in development                                    |
+| `pnpm format`                                | Format with Prettier                                                                  |
 
 ## How we work
 

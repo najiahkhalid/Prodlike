@@ -1,0 +1,213 @@
+# Scenario format: packages/shared/src/scenario/schema.ts  ·  Authoring guide: docs/scenario-authoring.md
+schemaVersion: 1
+slug: friday-deploy
+title: Friday Deploy Gone Wrong
+summary: It is Friday, 5 pm. Ship surge-pricing limits before the weekend rush, and find out what a database migration in the same release does to production.
+difficulty: advanced
+skills: [Bug fix, Database migrations, Rollback]
+estimatedMinutes: 20
+guestDemo: false
+
+company:
+  name: RideMate
+  description: >-
+    RideMate is a ride-hailing app. trips-service prices and records every ride in PostgreSQL;
+    the rider and driver apps talk to it through the API gateway.
+
+brief:
+  ticketId: RM-3304
+  priority: P1
+  type: bug
+  reportedBy: Pricing team
+  title: Surge fares are uncapped and short trips cost less than the minimum fare
+  body: >-
+    During last weekend's rain, surge reached 3.4x and riders were charged up to 3.4 times the normal
+    fare. Policy says surge is capped at 2.0x and never discounts (anything below 1.0 counts as 1.0,
+    and a missing surge means 1.0). Also, every trip must cost at least Rs 200. Fix fare() in
+    trips-service, test it and get it live before the Friday-night rush.
+  teammateMessage:
+    from: Kamran
+    role: Backend Engineer
+    text: >-
+      My migration 042 (an index to speed up "my trips") is riding in the same release. It ran fine on
+      staging. Have a good weekend!
+  objectives:
+    - Cap surge at 2.0x and enforce the Rs 200 minimum fare in src/fare.js.
+    - Add tests for the cap and the minimum.
+    - Ship the release and watch production.
+    - If production breaks, restore service fast, then make the release safe to ship again.
+  constraints:
+    - 'The terminal only allows: npm test, git diff, git log, git show, logs <service>, rollback.'
+    - Each hint costs 5 rubric points.
+
+architecture:
+  nodes:
+    - { id: riders, label: Rider app, kind: client, position: { x: 0, y: 0.6 } }
+    - { id: drivers, label: Driver app, kind: client, position: { x: 0, y: 2.4 } }
+    - { id: gateway, label: API gateway, kind: gateway, position: { x: 2, y: 1.5 } }
+    - { id: trips, label: trips-service, kind: service, position: { x: 4, y: 1.5 } }
+    - { id: db, label: PostgreSQL, kind: database, position: { x: 6.2, y: 1.5 } }
+  edges:
+    - [riders, gateway]
+    - [drivers, gateway]
+    - [gateway, trips]
+    - [trips, db]
+
+workspace:
+  entryFile: src/fare.js
+  readOnly: [src/index.js, db/migrations/041_create_trips.sql, README.md]
+
+terminal:
+  allow:
+    - { command: npm test, description: Run the unit tests }
+    - { command: git diff, description: Show your changes }
+    - { command: git log, description: Show recent commits in the release train }
+    - { command: git show, description: 'Show one commit, e.g. git show HEAD' }
+    - { command: logs, description: 'Tail production logs, e.g. logs db' }
+    - { command: rollback, description: Roll production back to the previous release }
+
+pipeline:
+  stages:
+    - { id: build, name: Build, run: npm run build }
+    - { id: lint, name: Lint, run: npm run lint }
+    - { id: test, name: Test, run: npm test }
+    - { id: migrate, name: Migrate (dry run), run: npm run migrate:check }
+    - { id: deploy, name: Deploy, run: null, simulatedSeconds: 3 }
+
+releases: { current: v5.1.9, next: v5.2.0 }
+
+deploy:
+  strategies: [direct, canary]
+  canaryPercent: 10
+
+baselineMetrics: { errorRatePct: 0.5, p95LatencyMs: 230, requestsPerSec: 480 }
+
+faults:
+  # No canary effect on purpose: a schema migration runs once against the shared database.
+  - id: index-lock
+    trigger: { after: deploy, delaySeconds: 6 }
+    alert:
+      severity: SEV-1
+      title: trips-service timing out, riders cannot book or end trips
+      service: trips
+    effect:
+      nodes: { trips: down, db: degraded, gateway: degraded }
+      metrics: { errorRatePct: 61, p95LatencyMs: 9000, requestsPerSec: 190 }
+      logs:
+        - {
+            level: WARN,
+            service: db,
+            message: 'process 4127 still waiting for ShareLock on relation {{TABLE}} after 5000.214 ms',
+          }
+        - {
+            level: INFO,
+            service: db,
+            message: 'migration 042 running for 94s: CREATE INDEX {{INDEX_NAME}} ON {{TABLE}} ({{COLUMN}})',
+          }
+        - {
+            level: ERROR,
+            service: trips,
+            message: 'canceling statement due to lock timeout: UPDATE {{TABLE}} SET status = $1 WHERE id = $2',
+          }
+        - {
+            level: ERROR,
+            service: gateway,
+            message: 'POST /trips 503 upstream trips-service (timeout 8000ms)',
+          }
+    resolutions:
+      - { type: rollback }
+      - {
+          type: file-matches-and-redeploy,
+          file: db/migrations/042_add_trip_index.sql,
+          pattern: "^\\s*(CREATE|create)\\s+(INDEX|index)\\s+(CONCURRENTLY|concurrently)\\b",
+        }
+
+rubric:
+  - id: fare-correct
+    skill: correctness
+    weight: 30
+    label: Surge cap and minimum fare applied
+    check: { type: hidden-tests, files: [fare.hidden.test.js] }
+    explainPass: Surge is capped at 2.0x, never discounts, and no trip costs less than Rs 200.
+    explainFail: A hidden check failed. Check surge above 2.0, below 1.0 and missing, and very short trips.
+  - id: cap-test
+    skill: testing
+    weight: 15
+    label: Surge cap covered by a test
+    check:
+      type: file-matches
+      file: tests/fare.test.js
+      pattern: "^(?!\\s*//).*surge:\\s*(2\\.\\d*[1-9]|[3-9](\\.\\d+)?|\\d{2,})\\b"
+    explainPass: You tested a surge above 2.0x, the exact case that overcharged riders.
+    explainFail: No test uses a surge above 2.0x, the case from the incident report.
+  - id: release-review
+    skill: deploymentSafety
+    weight: 15
+    label: Reviewed the release before shipping
+    check: { type: event-occurred, event: terminal.git-log, before: deploy.succeeded, otherwise: 0.4 }
+    explainPass: You checked what else was in the release before shipping on a Friday.
+    explainFail: You shipped on a Friday without checking what else was in the release.
+  - id: recovery-time
+    skill: recovery
+    weight: 25
+    label: Time to restore bookings
+    check:
+      type: timing
+      metric: timeToRecoverSeconds
+      thresholds:
+        - { maxSeconds: 90, fraction: 1 }
+        - { maxSeconds: 240, fraction: 0.7 }
+      otherwise: 0.4
+    explainPass: Bookings were back within 90 seconds. For a SEV-1, roll back first.
+    explainFail: Bookings took longer than 90 seconds to come back. For a SEV-1, roll back first, investigate after.
+  - id: safe-migration
+    skill: deploymentSafety
+    weight: 15
+    label: Migration made safe for the next deploy
+    check:
+      type: file-matches
+      file: db/migrations/042_add_trip_index.sql
+      pattern: "^\\s*(CREATE|create)\\s+(INDEX|index)\\s+(CONCURRENTLY|concurrently)\\b"
+    explainPass: Migration 042 now builds the index CONCURRENTLY, so it no longer blocks writes.
+    explainFail: Migration 042 still locks the table. Whoever deploys next will take production down again.
+
+hintPenalty: 5
+hints:
+  - when: before-tests-pass
+    text: Clamp the surge first (at least 1.0, at most 2.0, 1.0 when missing), then apply the minimum fare to the result.
+  - when: before-deploy
+    text: >-
+      Test the case from the ticket: fare({ km: 10, surge: 3.4 }) should equal fare({ km: 10, surge: 2 }).
+      Then a very short trip: fare({ km: 1, surge: 1 }) is 200.
+  - when: before-deploy
+    text: Before shipping on a Friday, run git log and git show HEAD. What exactly is migration 042 going to do to a busy table?
+  - when: incident-active
+    text: >-
+      Run logs db. A plain CREATE INDEX blocks every write to {{TABLE}} until it finishes. This is a
+      SEV-1: roll back now, then change migration 042 to CREATE INDEX CONCURRENTLY before anyone redeploys.
+
+debriefRules:
+  - id: rollback-first
+    when: { eventOccurred: recovery.rollback }
+    tip: >-
+      Rolling back first was right: with bookings down, restore service, then investigate. Your fare fix
+      went out with the rollback too, so re-ship it on Monday together with the corrected migration.
+  - id: canary-vs-migration
+    when: { eventOccurred: deploy.canary }
+    tip: >-
+      A canary sends 10% of traffic to the new code, but a migration runs once against the one shared
+      database, so it hit 100% of riders anyway. Ship risky migrations separately from code changes.
+  - id: read-the-migration
+    when: { eventMissing: terminal.git-show }
+    tip: >-
+      git show HEAD would have shown a plain CREATE INDEX on {{TABLE}}. In PostgreSQL that blocks writes
+      to a busy table; CREATE INDEX CONCURRENTLY does not. Read migrations in your release, especially on
+      a Friday.
+
+variants:
+  - id: rider
+    params: { INDEX_NAME: idx_trips_rider_id, TABLE: trips, COLUMN: rider_id }
+  - id: driver
+    params: { INDEX_NAME: idx_trips_driver_id, TABLE: trips, COLUMN: driver_id }
+  - id: events
+    params: { INDEX_NAME: idx_trip_events_trip_id, TABLE: trip_events, COLUMN: trip_id }

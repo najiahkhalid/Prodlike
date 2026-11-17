@@ -1,0 +1,203 @@
+# Scenario format: packages/shared/src/scenario/schema.ts  ·  Authoring guide: docs/scenario-authoring.md
+schemaVersion: 1
+slug: missing-env-var
+title: The Missing Env Variable
+summary: Fix phone-number handling for one-time passwords, then find out why a perfectly good release takes notifications down, and why rolling back does not help.
+difficulty: intermediate
+skills: [Bug fix, Configuration, Incident response]
+estimatedMinutes: 15
+guestDemo: false
+
+company:
+  name: PayDost
+  description: >-
+    PayDost is a mobile wallet. When a customer logs in, auth-service asks notifications-service to
+    send a one-time password (OTP) by SMS through an external SMS gateway.
+
+brief:
+  ticketId: PD-1107
+  priority: P1
+  type: bug
+  reportedBy: Customer Support
+  title: OTP SMS never arrives when the phone number has dashes or spaces
+  body: >-
+    Customers who type their number as "0300-1234567" or "+92 300 1234567" never receive their login
+    code, so they cannot log in. normalisePhone in notifications-service should turn any common
+    Pakistani mobile format into +923XXXXXXXXX, and return null for anything that is not a mobile
+    number. Fix it, add tests and ship it today.
+  teammateMessage:
+    from: Ayesha
+    role: SRE
+    text: >-
+      FYI the ops bot rotated the SMS gateway secrets overnight and regenerated
+      deploy/notifications.env. If anything looks odd after your deploy, the expected config is in
+      docs/runbook.md.
+  objectives:
+    - Fix normalisePhone in src/phone.js for numbers with dashes, spaces or a 92 prefix.
+    - Add tests for the new formats.
+    - Ship the fix through the pipeline.
+    - If notifications break, find the cause and restore service.
+  constraints:
+    - 'The terminal only allows: npm test, git diff, git log, git show, logs <service>, rollback.'
+    - Each hint costs 5 rubric points.
+
+architecture:
+  nodes:
+    - { id: app, label: Mobile app, kind: client, position: { x: 0, y: 1.5 } }
+    - { id: gateway, label: API gateway, kind: gateway, position: { x: 2, y: 1.5 } }
+    - { id: auth, label: auth-service, kind: service, position: { x: 4, y: 0.2 } }
+    - { id: notifications, label: notifications-service, kind: service, position: { x: 4, y: 2.8 } }
+    - { id: db, label: PostgreSQL, kind: database, position: { x: 6.2, y: 0.2 } }
+    - { id: sms, label: SMS gateway (ext), kind: external, position: { x: 6.2, y: 2.8 } }
+  edges:
+    - [app, gateway]
+    - [gateway, auth]
+    - [auth, db]
+    - [auth, notifications]
+    - [notifications, sms]
+
+workspace:
+  entryFile: src/phone.js
+  readOnly: [src/index.js, src/config.js, docs/runbook.md, README.md]
+
+terminal:
+  allow:
+    - { command: npm test, description: Run the unit tests }
+    - { command: git diff, description: Show your changes }
+    - { command: git log, description: Show recent commits in the release train }
+    - { command: git show, description: 'Show one commit, e.g. git show HEAD' }
+    - { command: logs, description: 'Tail production logs, e.g. logs notifications' }
+    - { command: rollback, description: Roll production back to the previous release }
+
+pipeline:
+  stages:
+    - { id: build, name: Build, run: npm run build }
+    - { id: lint, name: Lint, run: npm run lint }
+    - { id: test, name: Test, run: npm test }
+    - { id: deploy, name: Deploy, run: null, simulatedSeconds: 2 }
+
+releases: { current: v3.8.0, next: v3.8.1 }
+
+deploy:
+  strategies: [direct, canary]
+  canaryPercent: 10
+
+baselineMetrics: { errorRatePct: 0.2, p95LatencyMs: 210, requestsPerSec: 140 }
+
+faults:
+  - id: missing-env
+    trigger: { after: deploy, delaySeconds: 4 }
+    alert:
+      severity: SEV-2
+      title: notifications-service crash-looping, OTP SMS not delivered
+      service: notifications
+    effect:
+      nodes: { notifications: down, auth: degraded, gateway: degraded }
+      metrics: { errorRatePct: 31, p95LatencyMs: 2900, requestsPerSec: 120 }
+      canary:
+        nodes: { notifications: degraded, auth: degraded }
+        metrics: { errorRatePct: 3.4, p95LatencyMs: 480, requestsPerSec: 138 }
+      logs:
+        - { level: ERROR, service: notifications, message: 'Error: Missing required env var {{MISSING_VAR}}' }
+        - {
+            level: ERROR,
+            service: notifications,
+            message: 'process exited with code 1, restarting (attempt 7, back-off 30s)',
+          }
+        - {
+            level: WARN,
+            service: auth,
+            message: 'OTP dispatch failed for user u_5521: notifications-service unavailable',
+          }
+        - { level: ERROR, service: gateway, message: 'POST /auth/otp 503 upstream notifications-service' }
+    # No rollback here: the config is not part of the release, so rolling back keeps the broken config.
+    resolutions:
+      - { type: file-matches-and-redeploy, file: deploy/notifications.env, pattern: "^{{MISSING_VAR}}=\\S+" }
+
+rubric:
+  - id: fix-correct
+    skill: correctness
+    weight: 30
+    label: Phone numbers normalised in every common format
+    check: { type: hidden-tests, files: [phone.hidden.test.js] }
+    explainPass: Dashes, spaces and the 92 prefix all normalise to +923XXXXXXXXX, and non-mobile input returns null.
+    explainFail: A hidden check failed. Try more formats, and inputs that are not mobile numbers at all.
+  - id: format-test
+    skill: testing
+    weight: 15
+    label: New formats covered by a test
+    check:
+      type: file-matches
+      file: tests/phone.test.js
+      pattern: "^(?!\\s*//).*normalisePhone\\(\\s*['\"][^'\"]*[- ][^'\"]*['\"]"
+    explainPass: You added a test with a dashed or spaced number, the exact case customers reported.
+    explainFail: No test uses a number with a dash or a space, which is the bug customers reported.
+  - id: release-train
+    skill: deploymentSafety
+    weight: 15
+    label: Checked what else was in the release
+    check: { type: event-occurred, event: terminal.git-log, before: deploy.succeeded, otherwise: 0.4 }
+    explainPass: You read the release train before shipping.
+    explainFail: You shipped without checking what else was in the release (an ops-bot config commit).
+  - id: safe-deploy
+    skill: deploymentSafety
+    weight: 15
+    label: Safe deployment
+    check: { type: event-occurred, event: deploy.canary, otherwise: 0.7 }
+    explainPass: A canary kept the outage to about 10% of logins.
+    explainFail: A direct deploy stopped OTPs for every customer at once.
+  - id: recovery-time
+    skill: recovery
+    weight: 25
+    label: Time to restore OTP delivery
+    check:
+      type: timing
+      metric: timeToRecoverSeconds
+      thresholds:
+        - { maxSeconds: 180, fraction: 1 }
+        - { maxSeconds: 420, fraction: 0.7 }
+      otherwise: 0.4
+    explainPass: OTP delivery was restored within 3 minutes.
+    explainFail: OTP delivery took longer than 3 minutes to restore.
+
+hintPenalty: 5
+hints:
+  - when: before-tests-pass
+    text: Strip everything that is not a digit first, then decide by the length and the prefix.
+  - when: before-deploy
+    text: "Add tests like expect(normalisePhone('0300-1234567')).toBe('+923001234567') and expect(normalisePhone('12345')).toBeNull()."
+  - when: incident-active
+    text: notifications-service is restarting in a loop. Run logs notifications to see why it exits.
+  - when: incident-active
+    text: >-
+      {{MISSING_VAR}} is missing from deploy/notifications.env (the ops-bot commit removed it). Rolling
+      back will not help: the config is not part of the release. Copy the value from docs/runbook.md and
+      redeploy.
+
+debriefRules:
+  - id: rollback-config
+    when: { eventOccurred: rollback.completed }
+    tip: >-
+      Rollback only reverts code. This outage came from configuration that lives outside the release,
+      so the old code crashed in exactly the same way. Read the error first: "Missing required env var"
+      points straight at config.
+  - id: read-release-train
+    when: { eventMissing: terminal.git-log }
+    tip: >-
+      git log would have shown "ops: rotate SMS gateway secrets" in your release. Config commits from
+      bots deserve the same review as code.
+  - id: logs-first
+    when: { eventMissing: terminal.logs }
+    tip: >-
+      Start an incident with the logs of the failing service. One line, "Missing required env var
+      {{MISSING_VAR}}", told the whole story.
+
+variants:
+  - id: gateway-url
+    params:
+      MISSING_VAR: SMS_GATEWAY_URL
+      PRESENT_LINE: SMS_API_KEY=pk_live_7f3a91c2e4
+  - id: api-key
+    params:
+      MISSING_VAR: SMS_API_KEY
+      PRESENT_LINE: SMS_GATEWAY_URL=https://sms.paydost.internal/v2/send

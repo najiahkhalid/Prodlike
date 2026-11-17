@@ -1,0 +1,15 @@
+{
+  "name": "notifications-service",
+  "version": "3.8.0",
+  "private": true,
+  "description": "PayDost notifications-service (Prodlike training scenario)",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "node -e \"require('./src/phone'); console.log('build ok')\"",
+    "lint": "node --check src/phone.js && node --check src/index.js && node --check src/config.js",
+    "test": "jest --colors"
+  },
+  "devDependencies": {
+    "jest": "29.7.0"
+  }
+}

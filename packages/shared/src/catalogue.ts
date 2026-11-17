@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DIFFICULTIES, type Scenario, type Skill } from './scenario/schema';
+import { renderScenario } from './scenario/variants';
 
 /** Query parameters for GET /scenarios (FR-03). */
 export const CatalogueQuerySchema = z.object({
@@ -56,7 +57,9 @@ export function sourceSlug(s: { slug: string; basedOn?: string }): string {
 }
 
 /** Reduce a full scenario to the safe, public brief. */
-export function toBrief(s: Scenario): ScenarioBrief {
+export function toBrief(raw: Scenario): ScenarioBrief {
+  // The brief is the same for every variant; render it with the first one.
+  const s = renderScenario(raw, null);
   return {
     slug: s.slug,
     title: s.title,

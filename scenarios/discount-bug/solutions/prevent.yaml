@@ -1,0 +1,18 @@
+# Spot the bad timeout in the release before shipping: no incident at all.
+name: 'fix the timeout before shipping (prevention)'
+edits:
+  - {
+      file: src/discount.js,
+      find: 'order.total > DISCOUNT_THRESHOLD',
+      replace: 'order.total >= DISCOUNT_THRESHOLD',
+    }
+  - file: tests/discount.test.js
+    append: |
+      test('10% off at exactly Rs 1000', () => {
+        expect(applyDiscount({ total: 1000 })).toBe(900);
+      });
+  - { file: deploy/payments.env, pattern: '^PAYMENT_TIMEOUT_MS=\d+$', replace: 'PAYMENT_TIMEOUT_MS=5000' }
+before: [git-log]
+deploy: canary
+recover: []
+expect: { incident: false, resolvedBy: prevented, minScore: 100 }

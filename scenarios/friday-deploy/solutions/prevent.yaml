@@ -1,0 +1,18 @@
+# Read the release on a Friday: fix migration 042 before shipping, so nothing breaks.
+name: 'fix the migration before shipping (prevention)'
+edits:
+  - file: src/fare.js
+    find: 'const raw = (BASE_FARE + PER_KM * trip.km) * trip.surge;'
+    replace: 'const raw = Math.max(MIN_FARE, (BASE_FARE + PER_KM * trip.km) * Math.min(MAX_SURGE, Math.max(1, trip.surge || 1)));'
+  - file: tests/fare.test.js
+    append: |
+      test('surge cap', () => expect(fare({ km: 10, surge: 3 })).toBe(1100));
+  - {
+      file: db/migrations/042_add_trip_index.sql,
+      find: 'CREATE INDEX ',
+      replace: 'CREATE INDEX CONCURRENTLY ',
+    }
+before: [git-log]
+deploy: direct
+recover: []
+expect: { incident: false, resolvedBy: prevented, minScore: 100 }

@@ -49,9 +49,12 @@ describeDb('Role-based access (FR-02) and catalogue (FR-03, FR-04, FR-20)', () =
     });
 
     it('filters by difficulty, skill (case-insensitive) and text', async () => {
-      expect((await http().get('/scenarios?difficulty=advanced')).body.items).toHaveLength(0);
-      expect((await http().get('/scenarios?difficulty=beginner')).body.items).toHaveLength(1);
-      expect((await http().get('/scenarios?skill=testing')).body.items).toHaveLength(1);
+      const slugs = async (q: string) =>
+        ((await http().get(`/scenarios?${q}`)).body.items as { slug: string }[]).map((s) => s.slug).sort();
+      expect(await slugs('difficulty=advanced')).toEqual(['friday-deploy']);
+      expect(await slugs('difficulty=beginner')).toEqual(['discount-bug']);
+      expect(await slugs('difficulty=intermediate')).toEqual(['free-delivery', 'missing-env-var']);
+      expect(await slugs('skill=testing')).toEqual(['discount-bug', 'free-delivery']);
       expect((await http().get('/scenarios?skill=kubernetes')).body.items).toHaveLength(0);
       expect((await http().get('/scenarios?q=ByteBite')).body.items).toHaveLength(1);
       await http().get('/scenarios?difficulty=impossible').expect(400);
@@ -77,8 +80,12 @@ describeDb('Role-based access (FR-02) and catalogue (FR-03, FR-04, FR-20)', () =
 
     it('records the scenario as an immutable version', async () => {
       const versions = await prisma.scenarioVersion.findMany({ include: { scenario: true } });
-      expect(versions).toHaveLength(1);
-      expect(versions[0]).toMatchObject({ version: 1, scenario: { slug: 'discount-bug' } });
+      expect(versions.map((v) => [v.scenario.slug, v.version]).sort()).toEqual([
+        ['discount-bug', 1],
+        ['free-delivery', 1],
+        ['friday-deploy', 1],
+        ['missing-env-var', 1],
+      ]);
     });
   });
 
@@ -92,13 +99,15 @@ describeDb('Role-based access (FR-02) and catalogue (FR-03, FR-04, FR-20)', () =
       const admin = await loginAgent(app, 'admin@x.co');
       await admin.patch('/admin/scenarios/discount-bug').send({ published: false }).expect(200);
 
-      expect((await http().get('/scenarios')).body.items).toHaveLength(0);
+      const publicSlugs = async () =>
+        ((await http().get('/scenarios')).body.items as { slug: string }[]).map((s) => s.slug);
+      expect(await publicSlugs()).not.toContain('discount-bug');
       await http().get('/scenarios/discount-bug').expect(404);
       const adminView = (await admin.get('/scenarios')).body.items;
-      expect(adminView).toEqual([expect.objectContaining({ slug: 'discount-bug', published: false })]);
+      expect(adminView).toContainEqual(expect.objectContaining({ slug: 'discount-bug', published: false }));
 
       await admin.patch('/admin/scenarios/discount-bug').send({ published: true }).expect(200);
-      expect((await http().get('/scenarios')).body.items).toHaveLength(1);
+      expect(await publicSlugs()).toContain('discount-bug');
     });
   });
 });

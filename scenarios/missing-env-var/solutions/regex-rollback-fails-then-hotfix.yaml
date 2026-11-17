@@ -1,0 +1,17 @@
+# A different valid fix. Rolling back does NOT end this incident (config is not in the release);
+# restoring the variable does.
+name: 'regex fix, direct, rollback (no effect), then hotfix'
+edits:
+  - file: src/phone.js
+    find: 'const value = raw.trim();'
+    replace: "const value = raw.trim().replace(/[\\s-]/g, '').replace(/^\\+?92(?=3\\d{9}$)/, '0');"
+  - file: tests/phone.test.js
+    append: |
+      test('dashed', () => expect(normalisePhone('0300-1234567')).toBe('+923001234567'));
+deploy: direct
+recover: [rollback, hotfix]
+hotfixEdits:
+  - file: deploy/notifications.env
+    append: |
+      {{MISSING_VAR}}=restored-from-runbook
+expect: { incident: true, resolvedBy: hotfix, minScore: 80 }

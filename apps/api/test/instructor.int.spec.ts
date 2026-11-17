@@ -340,7 +340,12 @@ describeDb('Instructor & admin (Phase 5)', () => {
     it('reports sandbox health', async () => {
       const h: SandboxHealth = (await admin.get('/admin/sandboxes').expect(200)).body;
       expect(typeof h.docker).toBe('boolean');
-      expect(h.images.map((i) => i.slug)).toEqual(['discount-bug']); // variants share their base image
+      expect(h.images.map((i) => i.slug).sort()).toEqual([
+        'discount-bug',
+        'free-delivery',
+        'friday-deploy',
+        'missing-env-var',
+      ]); // variants share their base image
       expect(h.maxActive).toBeGreaterThan(0);
       expect(h.attemptsByState.COMPLETED).toBeGreaterThanOrEqual(3);
     });

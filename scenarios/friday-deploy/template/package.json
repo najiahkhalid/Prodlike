@@ -1,0 +1,16 @@
+{
+  "name": "trips-service",
+  "version": "5.1.9",
+  "private": true,
+  "description": "RideMate trips-service (Prodlike training scenario)",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "node -e \"require('./src/fare'); console.log('build ok')\"",
+    "lint": "node --check src/fare.js && node --check src/index.js",
+    "migrate:check": "node scripts/migrate-check.js",
+    "test": "jest --colors"
+  },
+  "devDependencies": {
+    "jest": "29.7.0"
+  }
+}

@@ -1,5 +1,7 @@
 // Browser-safe exports (no Node.js APIs). Server-only helpers live in ./node.
 export * from './scenario/schema';
+export * from './scenario/variants';
+export * from './scenario/solutions';
 export * from './events';
 export * from './api';
 export * from './auth';

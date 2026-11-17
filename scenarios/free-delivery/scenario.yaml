@@ -1,0 +1,199 @@
+# Scenario format: packages/shared/src/scenario/schema.ts  ·  Authoring guide: docs/scenario-authoring.md
+schemaVersion: 1
+slug: free-delivery
+title: Free Delivery Over Rs 1,500
+summary: Ship a small pricing feature for a bookstore checkout, then deal with a cache change that rode along in the same release.
+difficulty: intermediate
+skills: [Feature change, Testing, Canary release]
+estimatedMinutes: 15
+guestDemo: false
+
+company:
+  name: Kitaab.pk
+  description: >-
+    Kitaab.pk is an online bookstore. checkout-service prices each basket, including the delivery
+    fee, and catalogue-service serves book details from a cache in front of PostgreSQL.
+
+brief:
+  ticketId: KTB-219
+  priority: P2
+  type: feature
+  reportedBy: Marketing
+  title: Free standard delivery on orders of Rs 1,500 or more
+  body: >-
+    Marketing launches "Free delivery over Rs 1,500" on Monday. Standard delivery should cost nothing
+    when the basket total is Rs 1,500 or more, and stay Rs 150 below that. Express delivery is never
+    free: it always adds Rs 200 on top of the standard fee (so express on a free-delivery basket costs
+    Rs 200). Change deliveryFee in checkout-service, cover the new rule with tests and ship it.
+  teammateMessage:
+    from: Hira
+    role: Tech Lead
+    text: >-
+      Faraz merged a catalogue cache tweak into the same release this morning. Should be harmless,
+      but maybe ship this one as a canary and watch the latency graph.
+  objectives:
+    - Implement the free-delivery rule in src/delivery.js (express always costs Rs 200 extra).
+    - Add tests for the Rs 1,500 boundary and for express delivery.
+    - Ship through the pipeline, ideally as a canary.
+    - Watch production and recover if anything degrades.
+  constraints:
+    - 'The terminal only allows: npm test, git diff, git log, git show, logs <service>, rollback.'
+    - Each hint costs 5 rubric points.
+
+architecture:
+  nodes:
+    - { id: web, label: Storefront, kind: client, position: { x: 0, y: 1.5 } }
+    - { id: gateway, label: API gateway, kind: gateway, position: { x: 2, y: 1.5 } }
+    - { id: checkout, label: checkout-service, kind: service, position: { x: 4, y: 0.2 } }
+    - { id: catalogue, label: catalogue-service, kind: service, position: { x: 4, y: 2.8 } }
+    - { id: cache, label: Redis cache, kind: cache, position: { x: 6.2, y: 2.8 } }
+    - { id: db, label: PostgreSQL, kind: database, position: { x: 6.2, y: 1.2 } }
+  edges:
+    - [web, gateway]
+    - [gateway, checkout]
+    - [gateway, catalogue]
+    - [checkout, db]
+    - [catalogue, cache]
+    - [cache, db]
+
+workspace:
+  entryFile: src/delivery.js
+  readOnly: [src/index.js, src/catalogue-client.js, README.md]
+
+terminal:
+  allow:
+    - { command: npm test, description: Run the unit tests }
+    - { command: git diff, description: Show your changes }
+    - { command: git log, description: Show recent commits in the release train }
+    - { command: git show, description: 'Show one commit, e.g. git show HEAD' }
+    - { command: logs, description: 'Tail production logs, e.g. logs catalogue' }
+    - { command: rollback, description: Roll production back to the previous release }
+
+pipeline:
+  stages:
+    - { id: build, name: Build, run: npm run build }
+    - { id: lint, name: Lint, run: npm run lint }
+    - { id: test, name: Test, run: npm test }
+    - { id: deploy, name: Deploy, run: null, simulatedSeconds: 2 }
+
+releases: { current: v2.3.0, next: v2.3.1 }
+
+deploy:
+  strategies: [direct, canary]
+  canaryPercent: 10
+
+baselineMetrics: { errorRatePct: 0.3, p95LatencyMs: 140, requestsPerSec: 320 }
+
+faults:
+  - id: cache-ttl-zero
+    trigger: { after: deploy, delaySeconds: 5 }
+    alert:
+      severity: SEV-3
+      title: catalogue-service p95 latency above 2 s, database CPU at 97%
+      service: catalogue
+    effect:
+      nodes: { catalogue: degraded, cache: degraded, db: degraded, gateway: degraded }
+      metrics: { errorRatePct: 7.5, p95LatencyMs: 2400, requestsPerSec: 290 }
+      canary:
+        nodes: { catalogue: degraded }
+        metrics: { errorRatePct: 1.1, p95LatencyMs: 420, requestsPerSec: 316 }
+      logs:
+        - {
+            level: WARN,
+            service: catalogue,
+            message: 'cache MISS ratio 100% (CATALOGUE_CACHE_TTL_SECONDS={{BAD_TTL}}): every request hits PostgreSQL',
+          }
+        - { level: ERROR, service: db, message: 'too many connections (max 100): remaining slots reserved' }
+        - { level: WARN, service: cache, message: 'keys expire immediately after SET (ttl={{BAD_TTL}}s)' }
+        - {
+            level: ERROR,
+            service: gateway,
+            message: 'GET /books/:id 504 upstream catalogue-service after 2000ms',
+          }
+    resolutions:
+      - { type: rollback }
+      - {
+          type: file-matches-and-redeploy,
+          file: deploy/cache.env,
+          pattern: "^CATALOGUE_CACHE_TTL_SECONDS=([3-9]\\d|[1-9]\\d{2,})\\s*$",
+        }
+
+rubric:
+  - id: feature-correct
+    skill: correctness
+    weight: 35
+    label: Free delivery and express fee work as specified
+    check: { type: hidden-tests, files: [delivery.hidden.test.js] }
+    explainPass: Standard delivery is free from Rs 1,500, Rs 150 below it, and express always adds Rs 200.
+    explainFail: A hidden check failed. Re-read the ticket, especially the boundary and the express rule.
+  - id: boundary-test
+    skill: testing
+    weight: 20
+    label: Rs 1,500 boundary covered by a test
+    check: { type: file-matches, file: tests/delivery.test.js, pattern: "^(?!\\s*//).*total:\\s*1500\\b" }
+    explainPass: You tested the exact Rs 1,500 boundary.
+    explainFail: No test uses total 1500. A new rule needs a test at its exact boundary.
+  - id: tests-before-ship
+    skill: testing
+    weight: 10
+    label: Ran the tests before shipping
+    check: { type: event-occurred, event: tests.passed, before: deploy.succeeded, otherwise: 0.5 }
+    explainPass: You saw your tests pass before you deployed.
+    explainFail: You shipped without running the tests yourself first; the pipeline caught nothing this time, but it is slower feedback.
+  - id: safe-deploy
+    skill: deploymentSafety
+    weight: 15
+    label: Safe deployment
+    check: { type: event-occurred, event: deploy.canary, otherwise: 0.7 }
+    explainPass: A canary kept the slowdown to about 10% of shoppers.
+    explainFail: A direct deploy slowed the whole storefront down at once.
+  - id: recovery-time
+    skill: recovery
+    weight: 20
+    label: Time to restore normal latency
+    check:
+      type: timing
+      metric: timeToRecoverSeconds
+      thresholds:
+        - { maxSeconds: 120, fraction: 1 }
+        - { maxSeconds: 300, fraction: 0.7 }
+      otherwise: 0.4
+    explainPass: Latency was back to normal within 2 minutes.
+    explainFail: Latency took longer than 2 minutes to recover.
+
+hintPenalty: 5
+hints:
+  - when: before-tests-pass
+    text: All the logic lives in deliveryFee in src/delivery.js. The constants you need are already declared at the top.
+  - when: before-deploy
+    text: >-
+      Test the boundary: deliveryFee({ total: 1500 }) should be 0 and deliveryFee({ total: 1499 }) 150.
+      Then express: deliveryFee({ total: 1500, express: true }) is 200.
+  - when: incident-active
+    text: The slowdown is in catalogue-service, not checkout. Run logs catalogue, then git log to see what else shipped.
+  - when: incident-active
+    text: >-
+      deploy/cache.env now sets CATALOGUE_CACHE_TTL_SECONDS={{BAD_TTL}}, so nothing stays cached. Roll back,
+      or set it back to 300 and redeploy.
+
+debriefRules:
+  - id: use-canary
+    when: { eventMissing: deploy.canary }
+    tip: >-
+      Your tech lead suggested a canary because the release carried someone else's cache change. A 10%
+      canary would have shown the latency jump to a few shoppers instead of all of them.
+  - id: read-release-train
+    when: { eventMissing: terminal.git-log }
+    tip: >-
+      Read the release train before you ship. "perf(cache): shorten catalogue cache" was in the same
+      release, and git show would have revealed a TTL of {{BAD_TTL}} seconds.
+  - id: config-is-code
+    when: { eventOccurred: recovery.hotfix }
+    tip: >-
+      Fixing the cache config and redeploying kept your feature live. Next time, ask for config changes
+      to be reviewed like code: a TTL of {{BAD_TTL}} is a performance bug.
+
+variants:
+  - { id: ttl0, params: { BAD_TTL: '0' } }
+  - { id: ttl1, params: { BAD_TTL: '1' } }
+  - { id: ttl5, params: { BAD_TTL: '5' } }

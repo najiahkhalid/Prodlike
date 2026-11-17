@@ -1,0 +1,14 @@
+# A different valid fix (FR-14), shipped directly and recovered with a config hotfix.
+name: '!(total < threshold) fix, direct, config hotfix'
+edits:
+  - file: src/discount.js
+    find: 'if (order.total > DISCOUNT_THRESHOLD) {'
+    replace: 'if (!(order.total < DISCOUNT_THRESHOLD)) {'
+  - file: tests/discount.test.js
+    append: |
+      test('boundary', () => expect(applyDiscount({ total: 1000 })).toBe(900));
+deploy: direct
+recover: [hotfix]
+hotfixEdits:
+  - { file: deploy/payments.env, pattern: '^PAYMENT_TIMEOUT_MS=\d+$', replace: 'PAYMENT_TIMEOUT_MS=5000' }
+expect: { incident: true, resolvedBy: hotfix, minScore: 90 }

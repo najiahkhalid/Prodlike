@@ -1,0 +1,26 @@
+# Model playthrough: roll back the SEV-1 first, then make migration 042 safe before finishing.
+name: 'Math.min/max clamp, canary, rollback, then fix the migration'
+edits:
+  - file: src/fare.js
+    find: 'const raw = (BASE_FARE + PER_KM * trip.km) * trip.surge;'
+    replace: |-
+      const surge = Math.min(MAX_SURGE, Math.max(1, trip.surge ?? 1));
+        const raw = Math.max(MIN_FARE, (BASE_FARE + PER_KM * trip.km) * surge);
+  - file: tests/fare.test.js
+    append: |
+      test('surge is capped at 2.0x', () => {
+        expect(fare({ km: 10, surge: 3.4 })).toBe(1100);
+      });
+      test('minimum fare', () => {
+        expect(fare({ km: 1, surge: 1 })).toBe(200);
+      });
+before: [git-log, run-tests]
+deploy: canary
+recover: [rollback]
+afterEdits:
+  - {
+      file: db/migrations/042_add_trip_index.sql,
+      find: 'CREATE INDEX ',
+      replace: 'CREATE INDEX CONCURRENTLY ',
+    }
+expect: { incident: true, resolvedBy: rollback, minScore: 100 }

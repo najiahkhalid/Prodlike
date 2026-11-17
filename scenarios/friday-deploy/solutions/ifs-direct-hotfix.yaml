@@ -1,0 +1,25 @@
+# A different valid fix, recovered by shipping a safe migration as the hotfix.
+name: 'if statements, direct, CONCURRENTLY hotfix'
+edits:
+  - file: src/fare.js
+    find: |2
+        const raw = (BASE_FARE + PER_KM * trip.km) * trip.surge;
+        return Math.round(raw);
+    replace: |2
+        let surge = typeof trip.surge === 'number' ? trip.surge : 1;
+        if (surge < 1) surge = 1;
+        if (surge > MAX_SURGE) surge = MAX_SURGE;
+        const total = Math.round((BASE_FARE + PER_KM * trip.km) * surge);
+        return total < MIN_FARE ? MIN_FARE : total;
+  - file: tests/fare.test.js
+    append: |
+      test('cap', () => expect(fare({ km: 10, surge: 2.5 })).toBe(1100));
+deploy: direct
+recover: [hotfix]
+hotfixEdits:
+  - {
+      file: db/migrations/042_add_trip_index.sql,
+      find: 'CREATE INDEX ',
+      replace: 'create index concurrently ',
+    }
+expect: { incident: true, resolvedBy: hotfix, minScore: 85 }
