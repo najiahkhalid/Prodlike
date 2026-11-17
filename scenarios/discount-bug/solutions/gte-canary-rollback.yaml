@@ -1,0 +1,17 @@
+# A model playthrough: fix with >=, test the boundary, check the release, canary, roll back.
+name: '>= fix, canary, rollback'
+edits:
+  - {
+      file: src/discount.js,
+      find: 'order.total > DISCOUNT_THRESHOLD',
+      replace: 'order.total >= DISCOUNT_THRESHOLD',
+    }
+  - file: tests/discount.test.js
+    append: |
+      test('10% off at exactly Rs 1000', () => {
+        expect(applyDiscount({ total: 1000 })).toBe(900);
+      });
+before: [git-log, run-tests]
+deploy: canary
+recover: [rollback]
+expect: { incident: true, resolvedBy: rollback, minScore: 100 }

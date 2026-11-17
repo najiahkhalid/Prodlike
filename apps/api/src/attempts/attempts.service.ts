@@ -15,7 +15,8 @@ import type {
 } from '@prodlike/shared';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { sourceSlug } from '@prodlike/shared';
+import { listFiles } from '@prodlike/shared/dist/node';
+import { pickVariant, renderScenario, renderText, sourceSlug, variantParams } from '@prodlike/shared';
 import { ApiException, Errors } from '../common/api-exception';
 import type { Env } from '../config/env';
 import { EngineService } from '../engine/engine.service';
@@ -102,7 +103,7 @@ export class AttemptsService {
       },
       orderBy: { startedAt: 'desc' },
     });
-    if (existing) return this.view(await this.ensureSandbox(existing), def);
+    if (existing) return this.view(await this.ensureSandbox(existing), await this.defOf(existing));
 
     const version = await this.prisma.scenarioVersion.findFirst({
       where: { scenarioId: scenarioRow.id },
@@ -119,18 +120,25 @@ export class AttemptsService {
       },
       orderBy: [{ dueAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'asc' }],
     });
+    // Randomised fault variant (ADR-010): only when an instructor's assignment asks for it.
+    const seed = Math.floor(Math.random() * 2 ** 31);
     const attempt = await this.prisma.attempt.create({
       data: {
         userId: user.sub,
         assignmentId: assignment?.id ?? null,
         scenarioVersionId: version.id,
         state: 'PROVISIONING',
-        seed: Math.floor(Math.random() * 2 ** 31),
+        seed,
+        variantId: pickVariant(def, seed, assignment?.randomiseFaults ?? false),
         snapshot: { files: {} } satisfies Snapshot as unknown as Prisma.InputJsonValue,
       },
     });
-    await this.event(attempt.id, 'attempt.started', { scenario: slug, version: version.version });
-    return this.view(await this.ensureSandbox(attempt), def);
+    await this.event(attempt.id, 'attempt.started', {
+      scenario: slug,
+      version: version.version,
+      ...(attempt.variantId ? { variant: attempt.variantId } : {}),
+    });
+    return this.view(await this.ensureSandbox(attempt), await this.defOf(attempt));
   }
 
   async get(user: AccessTokenClaims, id: string): Promise<AttemptView> {
@@ -193,7 +201,7 @@ export class AttemptsService {
       this.lastSaveEvent.set(key, Date.now());
       await this.event(id, 'file.saved', { path });
     }
-    return { path, readOnly: false, modified: content !== this.templateContent(sourceSlug(def), path) };
+    return { path, readOnly: false, modified: content !== this.templateContent(def, attempt, path) };
   }
 
   // ---------------------------------------------------------------- terminal + tests
@@ -226,6 +234,10 @@ export class AttemptsService {
     const r = await this.sandbox.exec(ready.containerId!, decision.argv, { timeoutSec: 30 });
     await this.touch(id);
     await this.event(id, `terminal.${decision.argv.slice(0, 2).join('-')}`, { line, exitCode: r.exitCode });
+    // A green `npm test` in the terminal counts as "tests passed", like the Tests tab.
+    if (decision.argv[0] === 'npm' && decision.argv[1] === 'test' && r.exitCode === 0) {
+      await this.event(id, 'tests.passed', { via: 'terminal' });
+    }
     const note = r.timedOut ? '\n[stopped: commands are limited to 30 seconds]\n' : '';
     return { ...this.result(line, true, r.exitCode, r.output + note, r.durationMs), truncated: r.truncated };
   }
@@ -417,6 +429,7 @@ export class AttemptsService {
       throw errUnavailable((e as Error).message);
     }
 
+    await this.applyVariant(containerId, def, attempt);
     const restored = Object.entries(this.snapshotOf(attempt).files);
     for (const [path, content] of restored) await this.sandbox.writeFile(containerId, path, content);
 
@@ -491,8 +504,7 @@ export class AttemptsService {
       files: paths.map((path) => ({
         path,
         readOnly: def.workspace.readOnly.includes(path),
-        modified:
-          path in snapshot.files && snapshot.files[path] !== this.templateContent(sourceSlug(def), path),
+        modified: path in snapshot.files && snapshot.files[path] !== this.templateContent(def, attempt, path),
       })),
       progress: {
         changed: events.some((e) => e.type === 'file.saved'),
@@ -548,13 +560,42 @@ export class AttemptsService {
    * scenario never changes the rules of an attempt already in progress.
    */
   private async defOf(attempt: Attempt): Promise<Scenario> {
-    const cached = this.defByVersion.get(attempt.scenarioVersionId);
+    const key = `${attempt.scenarioVersionId}:${attempt.variantId ?? ''}`;
+    const cached = this.defByVersion.get(key);
     if (cached) return cached;
     const v = await this.prisma.scenarioVersion.findUnique({ where: { id: attempt.scenarioVersionId } });
     if (!v) throw Errors.notFound('This scenario');
-    const def = v.definition as unknown as Scenario;
-    this.defByVersion.set(attempt.scenarioVersionId, def);
+    // The attempt's variant: every {{KEY}} in the definition replaced (ADR-010).
+    const def = renderScenario(v.definition as unknown as Scenario, attempt.variantId);
+    this.defByVersion.set(key, def);
     return def;
+  }
+
+  /** Template files containing {{placeholders}}, per scenario folder (they never change at runtime). */
+  private readonly variantFiles = new Map<string, string[]>();
+
+  /**
+   * Write the attempt's variant of every templated file into a freshly claimed sandbox, and fold it
+   * into the seeded release-train commit, so `git diff` stays clean and `git log` tells the story.
+   */
+  private async applyVariant(containerId: string, def: Scenario, attempt: Attempt) {
+    if (def.variants.length === 0) return;
+    const slug = sourceSlug(def);
+    let files = this.variantFiles.get(slug);
+    if (!files) {
+      const dir = join(this.config.get('SCENARIOS_DIR', { infer: true }), slug, 'template');
+      files = listFiles(dir).filter((f) => readFileSync(join(dir, f), 'utf8').includes('{{'));
+      this.variantFiles.set(slug, files);
+    }
+    if (files.length === 0) return;
+    for (const f of files) {
+      const content = this.templateContent(def, attempt, f);
+      if (content !== undefined) await this.sandbox.writeFile(containerId, f, content);
+    }
+    await this.sandbox.exec(containerId, ['git', 'add', '-A']);
+    await this.sandbox.exec(containerId, [
+      'git', '-c', 'user.name=ci-bot', '-c', 'user.email=ci@prodlike.test', 'commit', '-q', '--amend', '--no-edit',
+    ]); // prettier-ignore
   }
 
   private snapshotOf(attempt: Attempt): Snapshot {
@@ -562,9 +603,11 @@ export class AttemptsService {
     return { files: { ...(s?.files ?? {}) } };
   }
 
-  private templateContent(slug: string, path: string): string | undefined {
-    const file = join(this.config.get('SCENARIOS_DIR', { infer: true }), slug, 'template', path);
-    return existsSync(file) ? readFileSync(file, 'utf8') : undefined;
+  /** A template file as this attempt's variant sees it (used for the "modified" markers). */
+  private templateContent(def: Scenario, attempt: Attempt, path: string): string | undefined {
+    const file = join(this.config.get('SCENARIOS_DIR', { infer: true }), sourceSlug(def), 'template', path);
+    if (!existsSync(file)) return undefined;
+    return renderText(readFileSync(file, 'utf8'), variantParams(def, attempt.variantId));
   }
 
   private path(raw: string): string {

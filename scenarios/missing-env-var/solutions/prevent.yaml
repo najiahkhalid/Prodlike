@@ -1,0 +1,16 @@
+# Notice the ops-bot commit, compare the config with the runbook and restore the variable first.
+name: 'restore the variable before shipping (prevention)'
+edits:
+  - file: src/phone.js
+    find: 'const value = raw.trim();'
+    replace: "const value = raw.replace(/[\\s-]/g, '').replace(/^92(?=3\\d{9}$)/, '+92');"
+  - file: tests/phone.test.js
+    append: |
+      test('spaces', () => expect(normalisePhone('0300 1234567')).toBe('+923001234567'));
+  - file: deploy/notifications.env
+    append: |
+      {{MISSING_VAR}}=restored-from-runbook
+before: [git-log]
+deploy: canary
+recover: []
+expect: { incident: false, resolvedBy: prevented, minScore: 100 }

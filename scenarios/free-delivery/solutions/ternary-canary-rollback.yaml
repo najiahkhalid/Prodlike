@@ -1,0 +1,22 @@
+name: 'ternary fee, tests first, canary, rollback'
+edits:
+  - file: src/delivery.js
+    find: |2
+        // TODO(KTB-219): free standard delivery from Rs 1,500; express always adds Rs 200.
+        return STANDARD_FEE;
+    replace: |2
+        const standard = order.total >= FREE_DELIVERY_FROM ? 0 : STANDARD_FEE;
+        return standard + (order.express ? EXPRESS_SURCHARGE : 0);
+  - file: tests/delivery.test.js
+    append: |
+      test('free from Rs 1,500', () => {
+        expect(deliveryFee({ total: 1500 })).toBe(0);
+        expect(deliveryFee({ total: 1499 })).toBe(150);
+      });
+      test('express always adds Rs 200', () => {
+        expect(deliveryFee({ total: 1500, express: true })).toBe(200);
+      });
+before: [git-log, run-tests]
+deploy: canary
+recover: [rollback]
+expect: { incident: true, resolvedBy: rollback, minScore: 100 }

@@ -1,0 +1,28 @@
+# Edit strings may use the attempt's variant placeholders, e.g. {{MISSING_VAR}}.
+name: 'strip non-digits, canary, restore the variable'
+edits:
+  - file: src/phone.js
+    find: |2
+        const value = raw.trim();
+        if (/^03\d{9}$/.test(value)) return `+92${value.slice(1)}`;
+        if (/^\+923\d{9}$/.test(value)) return value;
+        return null;
+    replace: |2
+        const digits = raw.replace(/\D/g, '');
+        if (/^03\d{9}$/.test(digits)) return `+92${digits.slice(1)}`;
+        if (/^923\d{9}$/.test(digits)) return `+${digits}`;
+        return null;
+  - file: tests/phone.test.js
+    append: |
+      test('dashes and spaces', () => {
+        expect(normalisePhone('0300-1234567')).toBe('+923001234567');
+        expect(normalisePhone('+92 300 1234567')).toBe('+923001234567');
+      });
+before: [git-log, run-tests]
+deploy: canary
+recover: [hotfix]
+hotfixEdits:
+  - file: deploy/notifications.env
+    append: |
+      {{MISSING_VAR}}=restored-from-runbook
+expect: { incident: true, resolvedBy: hotfix, minScore: 100 }

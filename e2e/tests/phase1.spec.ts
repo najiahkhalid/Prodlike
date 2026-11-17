@@ -18,8 +18,11 @@ test('learner golden path: sign up → tour → catalogue filter → brief → l
   await expect(page.getByRole('heading', { name: 'Scenario Catalogue' })).toBeVisible();
 
   // Filters live in the URL.
-  await page.getByRole('link', { name: 'Advanced' }).click();
+  await page.getByRole('link', { name: 'Advanced', exact: true }).click();
   await expect(page).toHaveURL(/difficulty=advanced/);
+  await expect(page.getByRole('link', { name: /Friday Deploy Gone Wrong/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /The Rs 1,000 Discount Bug/ })).toHaveCount(0);
+  await page.goto('/scenarios?q=kubernetes');
   await expect(page.getByText('No scenarios match these filters.')).toBeVisible();
   await page.getByRole('link', { name: 'Clear filters' }).click();
   await page.getByRole('link', { name: 'Testing', exact: true }).click();

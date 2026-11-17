@@ -99,7 +99,7 @@ faults:
         - {
             level: ERROR,
             service: payments,
-            message: 'charge failed: ETIMEDOUT after 50ms (PAYMENT_TIMEOUT_MS=50)',
+            message: 'charge failed: ETIMEDOUT after {{BAD_TIMEOUT_MS}}ms (PAYMENT_TIMEOUT_MS={{BAD_TIMEOUT_MS}})',
           }
         - { level: WARN, service: payments, message: 'retry 2/2 exhausted user=u_8812' }
         - { level: ERROR, service: gateway, message: 'POST /orders 502 upstream payments-service' }
@@ -158,7 +158,7 @@ hints:
   - when: incident-active
     text: >-
       The alert started right after release v1.4.2. Run git log and open deploy/payments.env:
-      PAYMENT_TIMEOUT_MS was changed from 5000 to 50. Fastest safe recovery: rollback.
+      PAYMENT_TIMEOUT_MS was changed from 5000 to {{BAD_TIMEOUT_MS}}. Fastest safe recovery: rollback.
 
 debriefRules:
   - id: use-canary
@@ -177,5 +177,8 @@ debriefRules:
       Rolling back first was right: restore service, then investigate. Next, re-ship your discount fix on
       its own and raise the timeout change with its author.
 
-# Randomised variants (THRESHOLD/RATE substitution in template + hidden tests) arrive with the engine in Phase 3.
-variants: []
+# Randomised variants (ADR-010): the bad timeout differs per learner when an instructor randomises faults.
+variants:
+  - { id: t50, params: { BAD_TIMEOUT_MS: '50' } }
+  - { id: t25, params: { BAD_TIMEOUT_MS: '25' } }
+  - { id: t80, params: { BAD_TIMEOUT_MS: '80' } }

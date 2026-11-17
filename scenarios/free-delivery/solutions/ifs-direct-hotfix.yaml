@@ -1,0 +1,24 @@
+# A different valid implementation, shipped directly, recovered by fixing the cache TTL.
+name: 'if statements, direct, cache hotfix'
+edits:
+  - file: src/delivery.js
+    find: |2
+        // TODO(KTB-219): free standard delivery from Rs 1,500; express always adds Rs 200.
+        return STANDARD_FEE;
+    replace: |2
+        let fee = STANDARD_FEE;
+        if (order.total >= FREE_DELIVERY_FROM) fee = 0;
+        if (order.express === true) fee += EXPRESS_SURCHARGE;
+        return fee;
+  - file: tests/delivery.test.js
+    append: |
+      test('boundary', () => expect(deliveryFee({ total: 1500 })).toBe(0));
+deploy: direct
+recover: [hotfix]
+hotfixEdits:
+  - {
+      file: deploy/cache.env,
+      pattern: '^CATALOGUE_CACHE_TTL_SECONDS=\d+$',
+      replace: 'CATALOGUE_CACHE_TTL_SECONDS=300',
+    }
+expect: { incident: true, resolvedBy: hotfix, minScore: 85 }
