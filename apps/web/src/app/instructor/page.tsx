@@ -128,57 +128,59 @@ export default async function InstructorPage({
               {cohort.assignments.length === 0 ? (
                 <p className="p-5 text-ink-muted">Nothing assigned yet. Pick a scenario for this class.</p>
               ) : (
-                <table className="w-full text-sm" aria-label="Assignments">
-                  <thead>
-                    <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                      <th className="px-5 py-2.5">Scenario</th>
-                      <th className="px-3 py-2.5">Deadline</th>
-                      <th className="px-3 py-2.5">Completed</th>
-                      <th className="px-3 py-2.5">Average</th>
-                      <th className="px-5 py-2.5" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cohort.assignments.map((a) => (
-                      <tr
-                        key={a.id}
-                        className={`border-b border-surface-border last:border-0 ${
-                          a.id === assignment?.id ? 'bg-primary-tint/40' : ''
-                        }`}
-                      >
-                        <td className="px-5 py-3">
-                          <Link
-                            href={`/instructor?cohort=${cohort.id}&assignment=${a.id}`}
-                            className="font-semibold text-ink hover:text-primary"
-                          >
-                            {a.scenario.title}
-                          </Link>
-                          <div className="text-xs capitalize text-ink-muted">{a.scenario.difficulty}</div>
-                        </td>
-                        <td className="px-3 py-3">
-                          {a.dueAt ? date(a.dueAt) : <span className="text-ink-muted">None</span>}
-                        </td>
-                        <td className="px-3 py-3 font-mono">
-                          {a.completed} / {a.learners}
-                        </td>
-                        <td className="px-3 py-3 font-mono">{a.averageScore ?? '—'}</td>
-                        <td className="px-5 py-3 text-right">
-                          <Link
-                            href={`/instructor/assignments/${a.id}`}
-                            className="mr-4 font-semibold text-primary hover:underline"
-                          >
-                            Results
-                          </Link>
-                          <ActionButton
-                            path={`/instructor/assignments/${a.id}`}
-                            label="Remove"
-                            confirmText={`Remove "${a.scenario.title}" from ${cohort.name}? Learners keep their attempts.`}
-                          />
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm" aria-label="Assignments">
+                    <thead>
+                      <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                        <th className="px-5 py-2.5">Scenario</th>
+                        <th className="px-3 py-2.5">Deadline</th>
+                        <th className="px-3 py-2.5">Completed</th>
+                        <th className="px-3 py-2.5">Average</th>
+                        <th className="px-5 py-2.5" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {cohort.assignments.map((a) => (
+                        <tr
+                          key={a.id}
+                          className={`border-b border-surface-border last:border-0 ${
+                            a.id === assignment?.id ? 'bg-primary-tint/40' : ''
+                          }`}
+                        >
+                          <td className="px-5 py-3">
+                            <Link
+                              href={`/instructor?cohort=${cohort.id}&assignment=${a.id}`}
+                              className="font-semibold text-ink hover:text-primary"
+                            >
+                              {a.scenario.title}
+                            </Link>
+                            <div className="text-xs capitalize text-ink-muted">{a.scenario.difficulty}</div>
+                          </td>
+                          <td className="px-3 py-3">
+                            {a.dueAt ? date(a.dueAt) : <span className="text-ink-muted">None</span>}
+                          </td>
+                          <td className="px-3 py-3 font-mono">
+                            {a.completed} / {a.learners}
+                          </td>
+                          <td className="px-3 py-3 font-mono">{a.averageScore ?? '—'}</td>
+                          <td className="px-5 py-3 text-right">
+                            <Link
+                              href={`/instructor/assignments/${a.id}`}
+                              className="mr-4 font-semibold text-primary hover:underline"
+                            >
+                              Results
+                            </Link>
+                            <ActionButton
+                              path={`/instructor/assignments/${a.id}`}
+                              label="Remove"
+                              confirmText={`Remove "${a.scenario.title}" from ${cohort.name}? Learners keep their attempts.`}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Card>
           </section>

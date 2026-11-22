@@ -45,6 +45,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build sandbox images (needed by the sandbox tests)
         run: node infra/scripts/build-scenarios.mjs
+      - name: Dependency audit (production dependencies; fails on high or critical, see docs/security.md)
+        run: pnpm audit --prod --audit-level high
       - run: pnpm format:check
       - run: pnpm db:generate
       - name: Apply migrations to a real Postgres
@@ -60,9 +62,23 @@ jobs:
           DATABASE_URL=$E2E_DATABASE_URL pnpm --filter @prodlike/api prisma:deploy
           DATABASE_URL=$E2E_DATABASE_URL ADMIN_EMAIL=admin@e2e.test ADMIN_PASSWORD=admin-password-123 \
             pnpm --filter @prodlike/api db:seed
-      - name: Install Playwright Chromium
-        run: pnpm --filter @prodlike/e2e exec playwright install --with-deps chromium
-      - name: End-to-end tests (Playwright)
+      # System libraries and the browser download are separate steps with retries: either one can hit a
+      # flaky mirror on shared runners, and the log then says which part failed.
+      - name: Install Playwright system dependencies
+        timeout-minutes: 10
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get update -q && pnpm --filter @prodlike/e2e exec playwright install-deps chromium && exit 0
+            echo "attempt $i failed, retrying in 15 s"; sleep 15
+          done
+          exit 1
+      # No browser download: GitHub's Ubuntu runners ship Google Chrome, and the e2e suite drives it
+      # through Playwright's "chrome" channel, the same way it runs on the demo laptop.
+      - name: Check the runner's Google Chrome
+        run: google-chrome --version
+      - name: End-to-end tests (Playwright, installed Google Chrome)
+        env:
+          PW_CHANNEL: chrome
         run: pnpm --filter @prodlike/e2e e2e
       - if: failure()
         uses: actions/upload-artifact@v4
@@ -117,6 +133,18 @@ jobs:
           grep -q 'pl_at' /tmp/jar
           curl -skf -b /tmp/jar https://localhost/api/auth/me | grep -q '"email":"ci@stack.test"'
           echo "Registered and authenticated through Caddy"
+      - name: Security headers on web and API responses (docs/security.md)
+        run: |
+          for url in https://localhost/ https://localhost/api/health; do
+            curl -skI "$url" | tr -d '\r' > /tmp/h.txt
+            cat /tmp/h.txt
+            for h in 'strict-transport-security: max-age=' 'x-content-type-options: nosniff' \
+                     'x-frame-options: DENY' "content-security-policy: default-src 'self'" 'referrer-policy:'; do
+              grep -qi "^$h" /tmp/h.txt || { echo "missing on $url: $h"; exit 1; }
+            done
+            if grep -qiE '^(server|x-powered-by):' /tmp/h.txt; then echo "server banner on $url"; exit 1; fi
+          done
+          echo "Security headers present"
       - name: Live channel (Socket.IO) reachable through Caddy
         run: |
           curl -skf "https://localhost/api/socket.io/?EIO=4&transport=polling" | grep -q '"sid"'

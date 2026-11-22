@@ -23,33 +23,35 @@ export default async function AdminPage() {
             {res.error.message}
           </p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                <th className="py-2.5 pr-3">Scenario</th>
-                <th className="py-2.5 pr-3">Difficulty</th>
-                <th className="py-2.5 pr-3">Status</th>
-                <th className="py-2.5">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {res.data.items.map((s) => (
-                <tr key={s.slug} className="border-b border-surface-border">
-                  <td className="py-3 pr-3">
-                    <div className="font-semibold text-ink">{s.title}</div>
-                    <div className="font-mono text-xs text-ink-muted">{s.slug}</div>
-                  </td>
-                  <td className="py-3 pr-3 capitalize">{s.difficulty}</td>
-                  <td className="py-3 pr-3">
-                    {s.published ? <Badge tone="ok">✓ Published</Badge> : <Badge>Draft</Badge>}
-                  </td>
-                  <td className="py-3">
-                    <PublishToggle slug={s.slug} published={s.published} />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                  <th className="py-2.5 pr-3">Scenario</th>
+                  <th className="py-2.5 pr-3">Difficulty</th>
+                  <th className="py-2.5 pr-3">Status</th>
+                  <th className="py-2.5">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {res.data.items.map((s) => (
+                  <tr key={s.slug} className="border-b border-surface-border">
+                    <td className="py-3 pr-3">
+                      <div className="font-semibold text-ink">{s.title}</div>
+                      <div className="font-mono text-xs text-ink-muted">{s.slug}</div>
+                    </td>
+                    <td className="py-3 pr-3 capitalize">{s.difficulty}</td>
+                    <td className="py-3 pr-3">
+                      {s.published ? <Badge tone="ok">✓ Published</Badge> : <Badge>Draft</Badge>}
+                    </td>
+                    <td className="py-3">
+                      <PublishToggle slug={s.slug} published={s.published} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </AppShell>

@@ -13,6 +13,13 @@ export function configureApp(app: NestExpressApplication) {
   const config = app.get(ConfigService<Env, true>);
   // Behind Caddy / the Next.js proxy: trust X-Forwarded-For so rate limits see the real client IP.
   app.set('trust proxy', 1);
+  // Do not advertise the framework; the API only ever returns JSON, so lock content sniffing too.
+  app.disable('x-powered-by');
+  app.use((_req: unknown, res: { setHeader(k: string, v: string): void }, next: () => void) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
   app.use(cookieParser());
   app.useGlobalFilters(new AllExceptionsFilter());
   // The browser normally calls the API through the web app's /api proxy (same origin);

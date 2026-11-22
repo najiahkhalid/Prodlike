@@ -66,7 +66,7 @@ export function Explorer({
               </span>
             )}
             {n.file.readOnly && (
-              <span className="text-[10px] text-slate-500" title="Read-only">
+              <span className="text-[10px] text-slate-400" title="Read-only">
                 ro
               </span>
             )}
@@ -75,7 +75,7 @@ export function Explorer({
       ) : (
         <li key={n.path}>
           <div
-            className="px-2 py-1.5 font-mono text-[13px] text-slate-500"
+            className="px-2 py-1.5 font-mono text-[13px] text-slate-400"
             style={{ paddingLeft: 8 + depth * 14 }}
           >
             ▾ {n.name}
@@ -142,7 +142,7 @@ export function TerminalPanel({
               <span className="text-accent-live">$</span> {l.text}
             </div>
           ) : l.kind === 'system' ? (
-            <div key={i} className="text-slate-500">
+            <div key={i} className="text-slate-400">
               {l.text}
             </div>
           ) : (
@@ -151,7 +151,7 @@ export function TerminalPanel({
             </div>
           ),
         )}
-        {busy && <div className="animate-pulse text-slate-500">running…</div>}
+        {busy && <div className="animate-pulse text-slate-400">running…</div>}
         <div ref={end} />
       </div>
       <form
@@ -200,9 +200,9 @@ export function TerminalPanel({
 
 export function TestsPanel({ result, busy }: { result: TestRunResult | null; busy: boolean }) {
   if (busy)
-    return <p className="animate-pulse p-4 font-mono text-[13px] text-slate-500">Running the test suite…</p>;
+    return <p className="animate-pulse p-4 font-mono text-[13px] text-slate-400">Running the test suite…</p>;
   if (!result)
-    return <p className="p-4 font-mono text-[13px] text-slate-500">Run the tests to see results here.</p>;
+    return <p className="p-4 font-mono text-[13px] text-slate-400">Run the tests to see results here.</p>;
   return (
     <div className="h-full overflow-auto bg-slate-950 px-3.5 py-2.5 font-mono text-[13px]">
       <p className="mb-2" role="status">
@@ -213,7 +213,7 @@ export function TestsPanel({ result, busy }: { result: TestRunResult | null; bus
             ✕ {result.failed} failed, {result.passed} passed
           </span>
         )}
-        <span className="text-slate-500">
+        <span className="text-slate-400">
           {' '}
           · {result.total} total · {(result.durationMs / 1000).toFixed(1)}s
         </span>
@@ -227,7 +227,7 @@ export function TestsPanel({ result, busy }: { result: TestRunResult | null; bus
                   ? 'text-ok-dark'
                   : c.status === 'failed'
                     ? 'text-bad-dark'
-                    : 'text-slate-500'
+                    : 'text-slate-400'
               }
             >
               {c.status === 'passed' ? '✓' : c.status === 'failed' ? '✕' : '–'} {c.name}

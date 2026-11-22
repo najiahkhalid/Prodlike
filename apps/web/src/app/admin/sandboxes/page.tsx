@@ -65,30 +65,32 @@ export default async function SandboxHealthPage() {
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
         <Card className="p-0">
           <h2 className="px-5 pb-2 pt-5 text-lg font-semibold">Scenario images</h2>
-          <table className="w-full text-sm" aria-label="Scenario images">
-            <thead>
-              <tr className="border-y border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                <th className="px-5 py-2.5">Scenario</th>
-                <th className="px-3 py-2.5">Image</th>
-                <th className="px-5 py-2.5">Warm pool</th>
-              </tr>
-            </thead>
-            <tbody>
-              {h.images.map((i) => (
-                <tr key={i.slug} className="border-b border-surface-border last:border-0">
-                  <td className="px-5 py-3 font-mono">{i.slug}</td>
-                  <td className="px-3 py-3">
-                    {i.built ? (
-                      <Badge tone="ok">✓ Built</Badge>
-                    ) : (
-                      <Badge tone="warn">Missing: run pnpm scenarios:build</Badge>
-                    )}
-                  </td>
-                  <td className="px-5 py-3 font-mono">{h.warmPool[i.slug] ?? 0}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" aria-label="Scenario images">
+              <thead>
+                <tr className="border-y border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                  <th className="px-5 py-2.5">Scenario</th>
+                  <th className="px-3 py-2.5">Image</th>
+                  <th className="px-5 py-2.5">Warm pool</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {h.images.map((i) => (
+                  <tr key={i.slug} className="border-b border-surface-border last:border-0">
+                    <td className="px-5 py-3 font-mono">{i.slug}</td>
+                    <td className="px-3 py-3">
+                      {i.built ? (
+                        <Badge tone="ok">✓ Built</Badge>
+                      ) : (
+                        <Badge tone="warn">Missing: run pnpm scenarios:build</Badge>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 font-mono">{h.warmPool[i.slug] ?? 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
         <Card>
           <h2 className="text-lg font-semibold">Attempts by state</h2>

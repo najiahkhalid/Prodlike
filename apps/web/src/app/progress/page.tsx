@@ -121,37 +121,39 @@ export default async function ProgressPage() {
 
           <Card className="mt-6">
             <h2 className="text-lg font-semibold">Completed attempts</h2>
-            <table className="mt-2 w-full text-sm">
-              <thead>
-                <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                  <th className="py-2.5 pr-3">Scenario</th>
-                  <th className="py-2.5 pr-3">Finished</th>
-                  <th className="py-2.5 pr-3">Score</th>
-                  <th className="py-2.5 pr-3">Recovered in</th>
-                  <th className="py-2.5 pr-3">Strategy</th>
-                  <th className="py-2.5" />
-                </tr>
-              </thead>
-              <tbody>
-                {p.attempts.map((a) => (
-                  <tr key={a.id} className="border-b border-surface-border">
-                    <td className="py-3 pr-3 font-medium text-ink">{a.scenario.title}</td>
-                    <td className="py-3 pr-3">{fmtDate(a.completedAt)}</td>
-                    <td className="py-3 pr-3 font-mono font-semibold text-ink">{a.score}</td>
-                    <td className="py-3 pr-3 font-mono">{duration(a.timeToRecoverSeconds)}</td>
-                    <td className="py-3 pr-3 capitalize">{a.strategy ?? '—'}</td>
-                    <td className="py-3 text-right">
-                      <Link
-                        href={`/attempts/${a.id}/debrief`}
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        Debrief
-                      </Link>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="mt-2 w-full text-sm">
+                <thead>
+                  <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                    <th className="py-2.5 pr-3">Scenario</th>
+                    <th className="py-2.5 pr-3">Finished</th>
+                    <th className="py-2.5 pr-3">Score</th>
+                    <th className="py-2.5 pr-3">Recovered in</th>
+                    <th className="py-2.5 pr-3">Strategy</th>
+                    <th className="py-2.5" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {p.attempts.map((a) => (
+                    <tr key={a.id} className="border-b border-surface-border">
+                      <td className="py-3 pr-3 font-medium text-ink">{a.scenario.title}</td>
+                      <td className="py-3 pr-3">{fmtDate(a.completedAt)}</td>
+                      <td className="py-3 pr-3 font-mono font-semibold text-ink">{a.score}</td>
+                      <td className="py-3 pr-3 font-mono">{duration(a.timeToRecoverSeconds)}</td>
+                      <td className="py-3 pr-3 capitalize">{a.strategy ?? '—'}</td>
+                      <td className="py-3 text-right">
+                        <Link
+                          href={`/attempts/${a.id}/debrief`}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          Debrief
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </Card>
         </>
       )}

@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -12,12 +13,17 @@ import type {
   WorkspaceFile,
 } from '@prodlike/shared';
 import { ClientApiError, clientApi } from '@/lib/client-api';
-import { CodeEditor } from './CodeEditor';
 import { Explorer, TerminalPanel, TestsPanel, type TerminalLine } from './panels';
 import { HintDialog } from './HintDialog';
 import { DeployDialog } from './system/DeployDialog';
 import { SystemPanel } from './system/SystemPanel';
 import { useEngine, type RealtimeConfig } from './useEngine';
+
+/** The editor (CodeMirror) is the heaviest part of the page: load it in its own chunk (NFR-01). */
+const CodeEditor = dynamic(() => import('./CodeEditor').then((m) => m.CodeEditor), {
+  ssr: false,
+  loading: () => <p className="p-4 font-mono text-[13px] text-slate-400">Loading the editor…</p>,
+});
 
 type SaveState = 'saved' | 'saving' | 'unsaved' | 'error';
 const STEPS = ['Understand', 'Change', 'Test', 'Ship', 'Recover'] as const;
@@ -329,7 +335,10 @@ export function Workspace({ initial, realtime }: { initial: AttemptView; realtim
         </div>
         <div className="border-t border-console-raised p-3 text-xs leading-relaxed text-console-muted">
           <b className="text-console-text">Ticket:</b> {view.scenario.ticketTitle}{' '}
-          <Link href={`/scenarios/${view.scenario.slug}`} className="text-accent-live hover:underline">
+          <Link
+            href={`/scenarios/${view.scenario.slug}`}
+            className="text-accent-live underline underline-offset-2"
+          >
             Full brief
           </Link>
         </div>

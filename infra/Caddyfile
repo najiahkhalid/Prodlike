@@ -6,6 +6,20 @@
 localhost {
 	encode gzip
 
+	# Security headers for every response (docs/security.md). "defer" applies them after the
+	# upstream answered, so they replace (not duplicate) what Next.js or the API already set.
+	header {
+		defer
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss:; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+		-X-Powered-By
+	}
+
 	# REST + WebSocket API under /api (prefix stripped before it reaches NestJS)
 	handle_path /api/* {
 		reverse_proxy api:4000

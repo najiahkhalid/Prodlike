@@ -39,33 +39,35 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
         ) : res.data.length === 0 ? (
           <p className="p-5 text-ink-muted">No users match.</p>
         ) : (
-          <table className="w-full text-sm" aria-label="Users">
-            <thead>
-              <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                <th className="px-5 py-2.5">User</th>
-                <th className="px-3 py-2.5">Organisation</th>
-                <th className="px-3 py-2.5">Joined</th>
-                <th className="px-3 py-2.5">Completed</th>
-                <th className="px-5 py-2.5">Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {res.data.map((u) => (
-                <tr key={u.id} className="border-b border-surface-border last:border-0">
-                  <td className="px-5 py-3">
-                    <div className="font-medium text-ink">{u.name}</div>
-                    <div className="text-xs text-ink-muted">{u.email}</div>
-                  </td>
-                  <td className="px-3 py-3 text-ink-muted">{u.organisation ?? '—'}</td>
-                  <td className="px-3 py-3 text-ink-muted">{day(u.createdAt)}</td>
-                  <td className="px-3 py-3 font-mono">{u.completedAttempts}</td>
-                  <td className="px-5 py-3">
-                    <RoleSelect userId={u.id} role={u.role} name={u.name} self={u.id === me.id} />
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" aria-label="Users">
+              <thead>
+                <tr className="border-b border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                  <th className="px-5 py-2.5">User</th>
+                  <th className="px-3 py-2.5">Organisation</th>
+                  <th className="px-3 py-2.5">Joined</th>
+                  <th className="px-3 py-2.5">Completed</th>
+                  <th className="px-5 py-2.5">Role</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {res.data.map((u) => (
+                  <tr key={u.id} className="border-b border-surface-border last:border-0">
+                    <td className="px-5 py-3">
+                      <div className="font-medium text-ink">{u.name}</div>
+                      <div className="text-xs text-ink-muted">{u.email}</div>
+                    </td>
+                    <td className="px-3 py-3 text-ink-muted">{u.organisation ?? '—'}</td>
+                    <td className="px-3 py-3 text-ink-muted">{day(u.createdAt)}</td>
+                    <td className="px-3 py-3 font-mono">{u.completedAttempts}</td>
+                    <td className="px-5 py-3">
+                      <RoleSelect userId={u.id} role={u.role} name={u.name} self={u.id === me.id} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </AppShell>

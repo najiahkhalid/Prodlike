@@ -1,0 +1,41 @@
+[
+  {
+    "url": "http://localhost:3100/",
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "lcpMs": 542,
+    "cls": 0.0,
+    "tbtMs": 0,
+    "report": "landing.report.html"
+  },
+  {
+    "url": "http://localhost:3100/login",
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "lcpMs": 575,
+    "cls": 0.0,
+    "tbtMs": 0,
+    "report": "login.report.html"
+  },
+  {
+    "url": "http://localhost:3100/signup",
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "lcpMs": 585,
+    "cls": 0.0,
+    "tbtMs": 0,
+    "report": "signup.report.html"
+  }
+]
