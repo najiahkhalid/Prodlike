@@ -72,15 +72,13 @@ jobs:
             echo "attempt $i failed, retrying in 15 s"; sleep 15
           done
           exit 1
-      - name: Install Playwright Chromium
-        timeout-minutes: 10
-        run: |
-          for i in 1 2 3; do
-            pnpm --filter @prodlike/e2e exec playwright install chromium && exit 0
-            echo "attempt $i failed, retrying in 15 s"; sleep 15
-          done
-          exit 1
-      - name: End-to-end tests (Playwright)
+      # No browser download: GitHub's Ubuntu runners ship Google Chrome, and the e2e suite drives it
+      # through Playwright's "chrome" channel, the same way it runs on the demo laptop.
+      - name: Check the runner's Google Chrome
+        run: google-chrome --version
+      - name: End-to-end tests (Playwright, installed Google Chrome)
+        env:
+          PW_CHANNEL: chrome
         run: pnpm --filter @prodlike/e2e e2e
       - if: failure()
         uses: actions/upload-artifact@v4
