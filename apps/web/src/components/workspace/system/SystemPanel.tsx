@@ -38,7 +38,7 @@ function MetricTiles({ history }: { history: Metrics[] }) {
   const errBad = cur.errorRatePct > 2;
   const latBad = cur.p95LatencyMs > 600;
   return (
-    <div className="mt-3 grid grid-cols-3 gap-2" aria-label="Production metrics">
+    <div role="group" className="mt-3 grid grid-cols-3 gap-2" aria-label="Production metrics">
       <div className="rounded-lg bg-console-raised p-2.5">
         <div className="text-[11px] text-console-muted">Error rate (5xx)</div>
         <div
@@ -272,38 +272,38 @@ export function SystemPanel({
   const unhealthy = Object.values(engine.nodes).some((s) => s === 'down' || s === 'degraded');
   return (
     <>
-      <div
-        role="tablist"
-        aria-label="System"
-        className="flex h-[38px] items-center gap-1 border-b border-console-raised px-2 text-[13px]"
-      >
-        {(
-          [
-            ['map', 'System Map'],
-            ['pipeline', 'Pipeline'],
-            ['incidents', 'Incidents'],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            role="tab"
-            type="button"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={`flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 ${tab === id ? 'border-accent-live text-white' : 'border-transparent text-console-muted hover:text-console-text'}`}
-          >
-            {label}
-            {id === 'incidents' && openIncident && (
-              <span
-                className="rounded-full bg-red-600 px-1.5 text-[10px] font-semibold text-white"
-                aria-label="1 open incident"
-              >
-                1
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="flex h-[38px] items-center gap-1 border-b border-console-raised px-2 text-[13px]">
+        <div role="tablist" aria-label="System" className="flex items-center gap-1">
+          {(
+            [
+              ['map', 'System Map'],
+              ['pipeline', 'Pipeline'],
+              ['incidents', 'Incidents'],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              role="tab"
+              type="button"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={`flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 ${tab === id ? 'border-accent-live text-white' : 'border-transparent text-console-muted hover:text-console-text'}`}
+            >
+              {label}
+              {id === 'incidents' && openIncident && (
+                <span
+                  className="rounded-full bg-red-600 px-1.5 text-[10px] font-semibold text-white"
+                  role="img"
+                  aria-label="1 open incident"
+                >
+                  1
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
         <span
+          role="img"
           className={`ml-auto h-2 w-2 rounded-full ${connected ? 'bg-ok-dark' : 'bg-warn-dark'}`}
           title={connected ? 'Live' : 'Reconnecting… (updates every 2 s)'}
           aria-label={connected ? 'Live updates connected' : 'Live updates reconnecting'}

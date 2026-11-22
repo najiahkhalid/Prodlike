@@ -4,7 +4,7 @@
 
 CS344 Web Engineering · NUST SEECS · Team Prodlike: Najiah Khalid (lead), Zeeshan Haider Awan, Bilal Ahmed.
 
-> **Status: Phase 6A (Scenarios).** Four complete scenarios: the Rs 1,000 Discount Bug (beginner), Free Delivery Over Rs 1,500 and The Missing Env Variable (intermediate), and Friday Deploy Gone Wrong (advanced). Assignments can randomise each learner's fault (variants), and every scenario ships reference solutions that CI plays end to end. Next: Phase 6B quality gates (accessibility, performance, load, security) and 6C pilot and release.
+> **Status: Phase 6B (Quality gates).** Every page passes an automated WCAG 2.1 AA scan with zero violations, works by keyboard and at 768 px, and loads well inside the 2.5 s LCP budget (Lighthouse 100 for performance and accessibility). A k6 load test ran 20 concurrent sandboxes with no errors. Security headers, a dependency-audit gate and a documented security review are in place, and members can edit their profile and password. Evidence: `docs/evidence/`, `docs/security.md`. Next: Phase 6C, the pilot and the v1.0.0 release.
 
 ## Repository layout
 
@@ -85,15 +85,17 @@ pnpm build && SANDBOX_TESTS=1 PW_CHANNEL=chrome pnpm --filter @prodlike/e2e e2e 
 
 ## Common scripts
 
-| Command                                      | What it does                                                                          |
-| -------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `pnpm dev`                                   | Run web, API and package watchers                                                     |
-| `pnpm build` / `lint` / `typecheck` / `test` | Run across the whole monorepo (Turborepo)                                             |
-| `pnpm scenarios:validate`                    | Validate every `scenarios/*/scenario.yaml` and the files it references                |
-| `pnpm scenarios:build`                       | Build the sandbox base image and all scenario images (needs Docker)                   |
-| `node infra/scripts/check-scenarios.mjs`     | Check every built scenario image: tests, hidden tests, reference solutions, isolation |
-| `pnpm db:migrate`                            | Create and apply a Prisma migration in development                                    |
-| `pnpm format`                                | Format with Prettier                                                                  |
+| Command                                      | What it does                                                                                             |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                   | Run web, API and package watchers                                                                        |
+| `pnpm build` / `lint` / `typecheck` / `test` | Run across the whole monorepo (Turborepo)                                                                |
+| `pnpm scenarios:validate`                    | Validate every `scenarios/*/scenario.yaml` and the files it references                                   |
+| `pnpm scenarios:build`                       | Build the sandbox base image and all scenario images (needs Docker)                                      |
+| `node infra/scripts/check-scenarios.mjs`     | Check every built scenario image: tests, hidden tests, reference solutions, isolation                    |
+| `pnpm quality:lighthouse`                    | Lighthouse on the built app (API + `next start` on :3100 running); reports to `docs/evidence/lighthouse` |
+| `pnpm load:test`                             | k6 load test in Docker (`BASE_URL`, `VUS`, `PROFILE=lab` or `burst`); see `docs/evidence/load-test.md`   |
+| `pnpm db:migrate`                            | Create and apply a Prisma migration in development                                                       |
+| `pnpm format`                                | Format with Prettier                                                                                     |
 
 ## How we work
 

@@ -112,39 +112,41 @@ export default async function DashboardPage({
                   : 'Join a class to see assignments here.'}
               </p>
             ) : (
-              <table className="w-full text-sm" aria-label="Assignments">
-                <tbody>
-                  {my.assignments.map((a) => (
-                    <tr key={a.id} className="border-b border-surface-border last:border-0">
-                      <td className="px-5 py-3">
-                        <div className="font-medium text-ink">{a.scenario.title}</div>
-                        <div className="text-xs text-ink-muted">
-                          {a.cohort}
-                          {a.dueAt &&
-                            ` · due ${new Date(a.dueAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`}
-                        </div>
-                      </td>
-                      <td className="px-3 py-3">
-                        {a.status === 'done' ? (
-                          <Badge tone="ok">✓ Done · {a.bestScore}</Badge>
-                        ) : a.status === 'late' ? (
-                          <Badge tone="warn">⚑ Late</Badge>
-                        ) : (
-                          <Badge tone="primary">To do</Badge>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <Link
-                          href={`/scenarios/${a.scenario.slug}`}
-                          className="font-semibold text-primary hover:underline"
-                        >
-                          {a.status === 'done' ? 'Improve' : 'Start'}
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" aria-label="Assignments">
+                  <tbody>
+                    {my.assignments.map((a) => (
+                      <tr key={a.id} className="border-b border-surface-border last:border-0">
+                        <td className="px-5 py-3">
+                          <div className="font-medium text-ink">{a.scenario.title}</div>
+                          <div className="text-xs text-ink-muted">
+                            {a.cohort}
+                            {a.dueAt &&
+                              ` · due ${new Date(a.dueAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3">
+                          {a.status === 'done' ? (
+                            <Badge tone="ok">✓ Done · {a.bestScore}</Badge>
+                          ) : a.status === 'late' ? (
+                            <Badge tone="warn">⚑ Late</Badge>
+                          ) : (
+                            <Badge tone="primary">To do</Badge>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <Link
+                            href={`/scenarios/${a.scenario.slug}`}
+                            className="font-semibold text-primary hover:underline"
+                          >
+                            {a.status === 'done' ? 'Improve' : 'Start'}
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </Card>
         </section>
@@ -168,27 +170,29 @@ export default async function DashboardPage({
           </div>
           <Card className="p-0">
             {p && p.attempts.length ? (
-              <table className="w-full text-sm">
-                <tbody>
-                  {p.attempts.slice(0, 5).map((a) => (
-                    <tr key={a.id} className="border-b border-surface-border last:border-0">
-                      <td className="px-5 py-3 font-medium text-ink">{a.scenario.title}</td>
-                      <td className="px-3 py-3 font-mono font-semibold text-ink">{a.score}</td>
-                      <td className="px-3 py-3 font-mono text-ink-muted">
-                        {duration(a.timeToRecoverSeconds)}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <Link
-                          href={`/attempts/${a.id}/debrief`}
-                          className="font-semibold text-primary hover:underline"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {p.attempts.slice(0, 5).map((a) => (
+                      <tr key={a.id} className="border-b border-surface-border last:border-0">
+                        <td className="px-5 py-3 font-medium text-ink">{a.scenario.title}</td>
+                        <td className="px-3 py-3 font-mono font-semibold text-ink">{a.score}</td>
+                        <td className="px-3 py-3 font-mono text-ink-muted">
+                          {duration(a.timeToRecoverSeconds)}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <Link
+                            href={`/attempts/${a.id}/debrief`}
+                            className="font-semibold text-primary hover:underline"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
               <p className="p-5 text-ink-muted">Your debriefs will appear here once you finish a scenario.</p>
             )}

@@ -121,55 +121,60 @@ export function ResultsView({ r }: { r: AssignmentResults }) {
         {r.rows.length === 0 ? (
           <p className="px-5 pb-5 text-ink-muted">No learners yet. Share the class join code.</p>
         ) : (
-          <table className="w-full text-sm" aria-label="Learner results">
-            <thead>
-              <tr className="border-y border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                <th className="px-5 py-2.5">Learner</th>
-                <th className="px-3 py-2.5">Best</th>
-                <th className="px-3 py-2.5">Attempts</th>
-                <th className="px-3 py-2.5">Recovery</th>
-                <th className="px-3 py-2.5">Strategy</th>
-                <th className="px-5 py-2.5" />
-              </tr>
-            </thead>
-            <tbody>
-              {r.rows.map((row) => (
-                <tr key={row.learner.id} className="border-b border-surface-border last:border-0">
-                  <td className="px-5 py-3">
-                    <div className="font-medium text-ink">{row.learner.name}</div>
-                    <div className="text-xs text-ink-muted">{row.learner.email}</div>
-                  </td>
-                  <td className="px-3 py-3">
-                    {row.bestScore === null ? (
-                      <Badge>Not done</Badge>
-                    ) : (
-                      <Badge tone={row.bestScore >= 80 ? 'ok' : row.bestScore >= 50 ? 'primary' : 'warn'}>
-                        {row.bestScore}
-                      </Badge>
-                    )}
-                    {row.late && (
-                      <span className="ml-1.5 text-xs font-semibold text-bad-text" title="After the deadline">
-                        ⚑ late
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3 font-mono">{row.attempts}</td>
-                  <td className="px-3 py-3 font-mono">{duration(row.timeToRecoverSeconds)}</td>
-                  <td className="px-3 py-3 capitalize">{row.strategy ?? '—'}</td>
-                  <td className="px-5 py-3 text-right">
-                    {row.bestAttemptId && (
-                      <Link
-                        href={`/instructor/attempts/${row.bestAttemptId}`}
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        Debrief
-                      </Link>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm" aria-label="Learner results">
+              <thead>
+                <tr className="border-y border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                  <th className="px-5 py-2.5">Learner</th>
+                  <th className="px-3 py-2.5">Best</th>
+                  <th className="px-3 py-2.5">Attempts</th>
+                  <th className="px-3 py-2.5">Recovery</th>
+                  <th className="px-3 py-2.5">Strategy</th>
+                  <th className="px-5 py-2.5" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {r.rows.map((row) => (
+                  <tr key={row.learner.id} className="border-b border-surface-border last:border-0">
+                    <td className="px-5 py-3">
+                      <div className="font-medium text-ink">{row.learner.name}</div>
+                      <div className="text-xs text-ink-muted">{row.learner.email}</div>
+                    </td>
+                    <td className="px-3 py-3">
+                      {row.bestScore === null ? (
+                        <Badge>Not done</Badge>
+                      ) : (
+                        <Badge tone={row.bestScore >= 80 ? 'ok' : row.bestScore >= 50 ? 'primary' : 'warn'}>
+                          {row.bestScore}
+                        </Badge>
+                      )}
+                      {row.late && (
+                        <span
+                          className="ml-1.5 text-xs font-semibold text-bad-text"
+                          title="After the deadline"
+                        >
+                          ⚑ late
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 font-mono">{row.attempts}</td>
+                    <td className="px-3 py-3 font-mono">{duration(row.timeToRecoverSeconds)}</td>
+                    <td className="px-3 py-3 capitalize">{row.strategy ?? '—'}</td>
+                    <td className="px-5 py-3 text-right">
+                      {row.bestAttemptId && (
+                        <Link
+                          href={`/instructor/attempts/${row.bestAttemptId}`}
+                          className="font-semibold text-primary hover:underline"
+                        >
+                          Debrief
+                        </Link>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>

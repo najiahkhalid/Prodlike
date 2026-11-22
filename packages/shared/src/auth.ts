@@ -32,6 +32,30 @@ export const ResetPasswordSchema = z.object({
 });
 export type ResetPasswordInput = z.input<typeof ResetPasswordSchema>;
 
+/** Profile & Settings: what a member may change about themselves. */
+export const UpdateProfileSchema = z.object({
+  name: z.string().trim().min(2, 'Enter your full name').max(80),
+  organisation: z
+    .string()
+    .trim()
+    .max(120)
+    .transform((v) => (v === '' ? null : v))
+    .nullable()
+    .optional(),
+});
+export type UpdateProfileInput = z.input<typeof UpdateProfileSchema>;
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: password,
+  })
+  .refine((v) => v.currentPassword !== v.newPassword, {
+    message: 'Choose a password different from the current one',
+    path: ['newPassword'],
+  });
+export type ChangePasswordInput = z.input<typeof ChangePasswordSchema>;
+
 /** The signed-in user, as returned by GET /auth/me. */
 export interface Me {
   id: string;

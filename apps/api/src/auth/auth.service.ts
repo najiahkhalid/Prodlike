@@ -2,7 +2,14 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { compare, hash, hashSync } from 'bcryptjs';
 import type { Response } from 'express';
-import type { LoginInput, Me, RegisterSchema, ResetPasswordInput } from '@prodlike/shared';
+import type {
+  ChangePasswordInput,
+  LoginInput,
+  Me,
+  RegisterSchema,
+  ResetPasswordInput,
+  UpdateProfileSchema,
+} from '@prodlike/shared';
 import type { z } from 'zod';
 import type { User } from '@prisma/client';
 import { ApiException } from '../common/api-exception';
@@ -124,6 +131,58 @@ export class AuthService {
   async markOnboarded(userId: string): Promise<Me> {
     const user = await this.prisma.user.update({ where: { id: userId }, data: { onboardedAt: new Date() } });
     return toMe(user);
+  }
+
+  /** Profile & Settings: change your own name and organisation. */
+  async updateProfile(userId: string, input: z.output<typeof UpdateProfileSchema>): Promise<Me> {
+    await this.assertMember(userId);
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: input.name,
+        ...(input.organisation !== undefined ? { organisation: input.organisation } : {}),
+      },
+    });
+    return toMe(user);
+  }
+
+  /**
+   * Change password, knowing the current one. Every other session is signed out; this browser gets
+   * fresh tokens so it stays signed in.
+   */
+  async changePassword(userId: string, input: ChangePasswordInput, res: Response): Promise<Me> {
+    const user = await this.assertMember(userId);
+    if (!(await compare(input.currentPassword, user.passwordHash ?? DUMMY_HASH))) {
+      throw new ApiException(
+        HttpStatus.BAD_REQUEST,
+        'WRONG_PASSWORD',
+        'Your current password is not correct.',
+        'Type it again, or use "Forgot password" on the login page.',
+        { currentPassword: 'This is not your current password' },
+      );
+    }
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: await hash(input.newPassword, BCRYPT_ROUNDS) },
+    });
+    await this.tokens.revokeAll(userId);
+    await this.tokens.issue(res, { sub: user.id, role: user.role, name: user.name });
+    return toMe(user);
+  }
+
+  private async assertMember(userId: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user)
+      throw new ApiException(HttpStatus.UNAUTHORIZED, 'UNAUTHENTICATED', 'Please log in.', 'Log in again.');
+    if (user.role === 'GUEST' || !user.passwordHash) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        'SIGN_UP_REQUIRED',
+        'Guest sessions have no profile.',
+        'Create a free account to keep your progress and settings.',
+      );
+    }
+    return user;
   }
 
   /** Always succeeds, whether or not the email exists, so the form cannot be used to find accounts. */

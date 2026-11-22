@@ -1,13 +1,16 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
   AUTH_COOKIES,
+  ChangePasswordSchema,
   ForgotPasswordSchema,
   LoginSchema,
   RegisterSchema,
   ResetPasswordSchema,
+  UpdateProfileSchema,
   type AccessTokenClaims,
+  type ChangePasswordInput,
   type ForgotPasswordInput,
   type LoginInput,
   type Me,
@@ -90,6 +93,26 @@ export class AuthController {
   @Get('me')
   me(@CurrentUser() user: AccessTokenClaims): Promise<Me> {
     return this.auth.me(user.sub);
+  }
+
+  /** Profile & Settings. */
+  @Patch('me')
+  updateMe(
+    @CurrentUser() user: AccessTokenClaims,
+    @Body(new ZodPipe(UpdateProfileSchema)) body: z.output<typeof UpdateProfileSchema>,
+  ): Promise<Me> {
+    return this.auth.updateProfile(user.sub, body);
+  }
+
+  @Throttle(authLimit())
+  @HttpCode(200)
+  @Post('change-password')
+  changePassword(
+    @CurrentUser() user: AccessTokenClaims,
+    @Body(new ZodPipe(ChangePasswordSchema)) body: ChangePasswordInput,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Me> {
+    return this.auth.changePassword(user.sub, body, res);
   }
 
   @HttpCode(200)

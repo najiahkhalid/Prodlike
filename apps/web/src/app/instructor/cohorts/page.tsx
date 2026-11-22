@@ -62,32 +62,34 @@ export default async function CohortsPage() {
                   Nobody has joined yet. Learners enter the code on their dashboard or at sign-up.
                 </p>
               ) : (
-                <table className="mt-3 w-full text-sm" aria-label={`Members of ${c.name}`}>
-                  <thead>
-                    <tr className="border-y border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
-                      <th className="px-5 py-2.5">Learner</th>
-                      <th className="px-3 py-2.5">Email</th>
-                      <th className="px-3 py-2.5">Joined</th>
-                      <th className="px-5 py-2.5" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {c.learners.map((l) => (
-                      <tr key={l.id} className="border-b border-surface-border last:border-0">
-                        <td className="px-5 py-3 font-medium text-ink">{l.name}</td>
-                        <td className="px-3 py-3 text-ink-muted">{l.email}</td>
-                        <td className="px-3 py-3 text-ink-muted">{day(l.joinedAt)}</td>
-                        <td className="px-5 py-3 text-right">
-                          <ActionButton
-                            path={`/instructor/cohorts/${c.id}/members/${l.id}`}
-                            label="Remove"
-                            confirmText={`Remove ${l.name} from ${c.name}?`}
-                          />
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="mt-3 w-full text-sm" aria-label={`Members of ${c.name}`}>
+                    <thead>
+                      <tr className="border-y border-surface-border text-left text-xs uppercase tracking-wider text-ink-muted">
+                        <th className="px-5 py-2.5">Learner</th>
+                        <th className="px-3 py-2.5">Email</th>
+                        <th className="px-3 py-2.5">Joined</th>
+                        <th className="px-5 py-2.5" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {c.learners.map((l) => (
+                        <tr key={l.id} className="border-b border-surface-border last:border-0">
+                          <td className="px-5 py-3 font-medium text-ink">{l.name}</td>
+                          <td className="px-3 py-3 text-ink-muted">{l.email}</td>
+                          <td className="px-3 py-3 text-ink-muted">{day(l.joinedAt)}</td>
+                          <td className="px-5 py-3 text-right">
+                            <ActionButton
+                              path={`/instructor/cohorts/${c.id}/members/${l.id}`}
+                              label="Remove"
+                              confirmText={`Remove ${l.name} from ${c.name}?`}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Card>
           ))}

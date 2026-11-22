@@ -110,7 +110,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   aria-checked={role === r}
                   onClick={() => setRole(r)}
                   className={`rounded-[5px] py-2 text-sm font-semibold ${
-                    role === r ? 'bg-white text-ink shadow-card' : 'text-ink-muted'
+                    role === r ? 'bg-white text-ink shadow-card' : 'text-ink-body'
                   }`}
                 >
                   {r === 'LEARNER' ? 'Learner' : 'Instructor'}

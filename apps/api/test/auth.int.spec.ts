@@ -144,4 +144,69 @@ describeDb('Auth (FR-01, NFR-11)', () => {
     await http().post('/auth/login').send({ email: ali.email, password: ali.password }).expect(401);
     await http().post('/auth/login').send({ email: ali.email, password: 'brand-new-pass-2' }).expect(200);
   });
+
+  describe('Profile & Settings', () => {
+    const sara = { name: 'Sara Khan', email: 'sara@seecs.edu.pk', password: 'first-password-1' };
+    const agent = () => request.agent(app.getHttpServer());
+
+    it('updates name and organisation, with validation', async () => {
+      const a = agent();
+      await a.post('/auth/register').send(sara).expect(201);
+      const bad = await a.patch('/auth/me').send({ name: 'S' }).expect(400);
+      expect(bad.body.fields).toHaveProperty('name');
+      const me = (await a.patch('/auth/me').send({ name: 'Sara A. Khan', organisation: 'NUST' }).expect(200))
+        .body;
+      expect(me).toMatchObject({ name: 'Sara A. Khan', organisation: 'NUST' });
+      expect(
+        (await a.patch('/auth/me').send({ name: 'Sara A. Khan', organisation: '' }).expect(200)).body
+          .organisation,
+      ).toBeNull();
+      await http().patch('/auth/me').send({ name: 'Nobody' }).expect(401);
+    });
+
+    it('changes the password: needs the current one, signs out other sessions, keeps this one', async () => {
+      const here = agent();
+      const elsewhere = agent();
+      await here.post('/auth/login').send({ email: sara.email, password: sara.password }).expect(200);
+      await elsewhere.post('/auth/login').send({ email: sara.email, password: sara.password }).expect(200);
+
+      const wrong = await here
+        .post('/auth/change-password')
+        .send({ currentPassword: 'not-my-password', newPassword: 'second-password-2' })
+        .expect(400);
+      expect(wrong.body).toMatchObject({
+        code: 'WRONG_PASSWORD',
+        fields: { currentPassword: expect.any(String) },
+      });
+      const same = await here
+        .post('/auth/change-password')
+        .send({ currentPassword: sara.password, newPassword: sara.password })
+        .expect(400);
+      expect(same.body.fields).toHaveProperty('newPassword');
+
+      await here
+        .post('/auth/change-password')
+        .send({ currentPassword: sara.password, newPassword: 'second-password-2' })
+        .expect(200);
+      // This browser got fresh tokens and stays signed in (refresh still works) ...
+      await here.post('/auth/refresh').expect(200);
+      // ... the other session's refresh token was revoked.
+      await elsewhere.post('/auth/refresh').expect(401);
+
+      await http().post('/auth/login').send({ email: sara.email, password: sara.password }).expect(401);
+      await http().post('/auth/login').send({ email: sara.email, password: 'second-password-2' }).expect(200);
+    });
+
+    it('guests have no profile to change', async () => {
+      const guest = agent();
+      await guest.post('/auth/guest').expect(201);
+      expect((await guest.patch('/auth/me').send({ name: 'Guest Person' }).expect(403)).body.code).toBe(
+        'SIGN_UP_REQUIRED',
+      );
+      await guest
+        .post('/auth/change-password')
+        .send({ currentPassword: 'whatever-1', newPassword: 'whatever-22' })
+        .expect(403);
+    });
+  });
 });

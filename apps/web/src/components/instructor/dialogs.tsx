@@ -1,12 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@prodlike/ui';
 import type { CohortView } from '@prodlike/shared';
 import { Field, FormError } from '@/components/auth/Field';
 import { ClientApiError, clientApi } from '@/lib/client-api';
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Accessible modal (NFR-07): focus moves into the dialog, Tab stays inside it, Escape closes it,
+ * and focus returns to whatever opened it.
+ */
 function Modal({
   title,
   onClose,
@@ -16,12 +23,40 @@ function Modal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [opener] = useState(() =>
+    typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null),
+  );
+  useEffect(() => {
+    const box = ref.current;
+    if (box && !box.contains(document.activeElement)) box.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    return () => opener?.focus();
+  }, [opener]);
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      onClose();
+      return;
+    }
+    if (e.key !== 'Tab' || !ref.current) return;
+    const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-secondary/55 p-4"
-      onKeyDown={(e) => e.key === 'Escape' && onClose()}
-    >
+    <div className="fixed inset-0 z-50 grid place-items-center bg-secondary/55 p-4" onKeyDown={onKeyDown}>
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={title}
