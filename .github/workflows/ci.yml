@@ -62,8 +62,24 @@ jobs:
           DATABASE_URL=$E2E_DATABASE_URL pnpm --filter @prodlike/api prisma:deploy
           DATABASE_URL=$E2E_DATABASE_URL ADMIN_EMAIL=admin@e2e.test ADMIN_PASSWORD=admin-password-123 \
             pnpm --filter @prodlike/api db:seed
+      # System libraries and the browser download are separate steps with retries: either one can hit a
+      # flaky mirror on shared runners, and the log then says which part failed.
+      - name: Install Playwright system dependencies
+        timeout-minutes: 10
+        run: |
+          for i in 1 2 3; do
+            sudo apt-get update -q && pnpm --filter @prodlike/e2e exec playwright install-deps chromium && exit 0
+            echo "attempt $i failed, retrying in 15 s"; sleep 15
+          done
+          exit 1
       - name: Install Playwright Chromium
-        run: pnpm --filter @prodlike/e2e exec playwright install --with-deps chromium
+        timeout-minutes: 10
+        run: |
+          for i in 1 2 3; do
+            pnpm --filter @prodlike/e2e exec playwright install chromium && exit 0
+            echo "attempt $i failed, retrying in 15 s"; sleep 15
+          done
+          exit 1
       - name: End-to-end tests (Playwright)
         run: pnpm --filter @prodlike/e2e e2e
       - if: failure()
